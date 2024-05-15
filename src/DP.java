@@ -2,116 +2,123 @@ public class DP {
     private final StrandPool sp;
     private final int INFTY = Integer.MAX_VALUE / 4;
     public static final int NOT_SET = 100000;
-    int mfeValue;
+    double mfeValue;
+    DPType dpt;
     private int startM;
-    int partFuncValue;
+    double partFuncValue;
     int theta;
+    private final boolean conn;
     SecondaryStructure mfeStructure;
-    public DP(StrandPool sp, int theta){
+    public DP(StrandPool sp, int theta, boolean conn, DPType dpt){
         this.sp = sp;
         this.theta = theta;
         mfeValue = NOT_SET;
         partFuncValue = 0;
         startM = 0;
+        this.conn = conn;
+        this.dpt = dpt;
     }
-    private int minOverStrands(int m, int r, int j){
-        int res = 0;
+    private double minOverStrands(int m, int r, int j){
+        double res = 0;
         for (int t = 0; t < sp.getNumStrands();t++){
-            int val = getOrComputeM(m, t, 0, r, j);
-            if (val < res) res = val;
+            double val = getOrComputeM(m, t, 0, r, j, conn);
+            res = dpt.min(res, val);
         }
         return res;
     }
-    private int minOverSecStrands(int m, int s, int i){
-        int res = 0;
+    private double minOverSecStrands(int m, int s, int i){
+        double res = 0;
         for (int u = 0; u < sp.getNumStrands();u++){
-            int val = getOrComputeM(m, s, i, u, sp.getStrandLength(u) - 1);
-            if (val < res) res = val;
+            double val = getOrComputeM(m, s, i, u, sp.getStrandLength(u) - 1, conn);
+            res = dpt.min(res, val);
         }
         return res;
     }
-    private int M(int m, int s, int i, int r, int j){
-        if (m==0) return 0;
+    private double M(int m, int s, int i, int r, int j, boolean c){
+        if (m==0) return dpt.noEffect();
         if (m==1) {
-            if (i+1 < sp.getStrandLength(s) && j > 0 && j > i+1) return getOrComputeM(1, s, i+1, s, j-1);
+            if (i+1 < sp.getStrandLength(s) && j > 0 && j > i+1) return getOrComputeM(1, s, i+1, s, j-1, false);
             return 0;
         }
         if (j > 0){
-            if (i+1 < sp.getStrandLength(s)) return getOrComputeM(m, s, i+1, r, j-1);
-            if (m==2) return getOrComputeM(1, r, 0, r, j-1);
+            if (i+1 < sp.getStrandLength(s)) return getOrComputeM(m, s, i+1, r, j-1, c);
+            if (m==2) return getOrComputeM(1, r, 0, r, j-1, false);
             return minOverStrands(m-1, r, j-1);
         }
         if (i+1 < sp.getStrandLength(s)){
-            if (m==2) return getOrComputeM(1, s, i+1, s, sp.getStrandLength(s)-1);
+            if (m==2) return getOrComputeM(1, s, i+1, s, sp.getStrandLength(s)-1, false);
             return minOverSecStrands(m-1, s, i+1);
         }
         return 0;
     }
-    private int E(int s, int i, int r, int j){
-        if (Base.pair(sp.getBase(s, i), sp.getBase(r, j))) return -1;
-        return INFTY;
+    private boolean bp(int s, int i, int r, int j){
+        return (Base.pair(sp.getBase(s, i), sp.getBase(r, j)));
     }
-    private int computeMultiloop(int m, int s, int i, int r, int j){
-        int mfe = INFTY;
+    private double computeMultiloop(int m, int s, int i, int r, int j, boolean c){
+        double mfe = 0;
         for (int mm = 1; mm <= m; mm++){
             if (mm == 1){
                 int lim = sp.getStrandLength(s);
                 if (m == 1) lim = j;
-                for (int k = i + theta + 1; k < lim; k++){
-                    int val = E(s, i, s, k) + M(1, s, i, s, k) + M(m, s, k, r, j+1);
-                    if (val < mfe) mfe = val;
+                for (int k = i + theta + 1; k < lim; k++) if (bp(s,i,r,j)){
+                    double val = dpt.sum(dpt.sum(dpt.E(), M(1, s, i, s, k, false)), M(m, s, k, r, j+1, (m > 1) && c));
+                    mfe = dpt.min(mfe, val);
                 }
             }
             else if (mm == m){
-                for (int k = 0; k <= j; k++){
-                    int val = E(s, i, r, k) + M(m, s, i, r, k) + M(1, r, k, r, j+1);
-                    if (val < mfe) mfe = val;
+                for (int k = 0; k <= j; k++) if (bp(s,i,r,j)){
+                    double val = dpt.sum(dpt.sum(dpt.E(), M(m, s, i, r, k, false)),M(1, r, k, r, j+1, false));
+                    mfe = dpt.min(mfe, val);
                 }
             }
             else for (int t = 0; t < sp.getNumStrands(); t++){
-                for (int k = 0; k < sp.getStrandLength(t); k++){
-                    int val = E(s, i, t, k) + M(mm, s, i, t, k) + M(m-mm+1, t, k, r, j+1);
-                    if (val < mfe) mfe = val;
+                for (int k = 0; k < sp.getStrandLength(t); k++) if(bp(s, i, t, k)){
+                    double val = dpt.sum(dpt.sum(dpt.E(), M(mm, s, i, t, k, false)), M(m-mm+1, t, k, r, j+1, c));
+                    mfe = dpt.min(mfe, val);
                 }
             }
         }
         return mfe;
     }
-    private int computeMFERegion(int m, int s, int i, int r, int j){
-        int unpaired;
-        if (i+1 < sp.getStrandLength(s)) unpaired = getOrComputeM(m, s, i+1, r, j);
-        else if (m==2) unpaired = getOrComputeM(1, r, 0, r, j);
+
+    /**
+     * @param m number of still available strands
+     * @param s index of leftmost strand
+     * @param i leftmost position on s
+     * @param r index of rightmost strand
+     * @param j rightmost position on r
+     * @param c true if s and r have to be connected, false else
+     * @return minimum free energy value for an interval from s_i to r_j on m strands, respecting the connectivity bit c.
+     */
+    private double computeMFERegion(int m, int s, int i, int r, int j, boolean c){
+        double unpaired;
+        if (i+1 < sp.getStrandLength(s)) unpaired = getOrComputeM(m, s, i+1, r, j, c);
+        else if (m==2) unpaired = getOrComputeM(1, r, 0, r, j, false);
         else unpaired = minOverStrands(m - 1, r, j);
-        int stack = 0;//E(s, i, r, j) + M(m, s, i, r, j);
-        int multi = computeMultiloop(m, s, i, r, j);
-        int mfe = min(unpaired, stack, multi);
-        sp.setM(m, s, i, r, j, mfe);
+        double multi = computeMultiloop(m, s, i, r, j, c);
+        double mfe = dpt.min(unpaired, multi);
+        sp.setM(m, s, i, r, j, c, mfe);
         return mfe;
     }
-    private int getOrComputeM(int m, int s, int i, int r, int j){
-        int val = sp.getM(m, s, i, r, j);
+    private double getOrComputeM(int m, int s, int i, int r, int j, boolean c){
+        double val = sp.getM(m, s, i, r, j, c);
         if (val == NOT_SET){
-            val = computeMFERegion(m, s, i, r, j);
+            val = computeMFERegion(m, s, i, r, j, c);
         }
         return val;
     }
-    public int computeMFE(int m){
+    public double computeMFE(int m){
         startM = m;
-        sp.initializeTable(m, theta);
-        int mfe = INFTY;
+        sp.initializeTable(m, theta, dpt.initValue());
+        double mfe = 0;
         for (int s = 0; s < sp.getNumStrands(); s++) {
             for (int r = 0; r < sp.getNumStrands(); r++) {
-                int val = getOrComputeM(m, s, 0, r, sp.getStrandLength(r) - 1);
-                if (val < mfe) mfe = val;
+                double val = getOrComputeM(m, s, 0, r, sp.getStrandLength(r) - 1, conn);
+                mfe = dpt.min(mfe, val);
             }
         }
         mfeValue = mfe;
         return mfe;
-    }
-    private static int min(int a, int b, int c){
-        if (b < a) a = b;
-        if (c < a) a = c;
-        return a;
     }
 
     /**
@@ -122,17 +129,17 @@ public class DP {
         mfeStructure = new SecondaryStructure(sp, startM);
         for (int s = 0; s < sp.getNumStrands(); s++){
         for (int r = 0; r < sp.getNumStrands(); r++) {
-            if (sp.getM(startM, s, 0, r, sp.getStrandLength(r) - 1) == mfeValue) {
+            if (sp.getM(startM, s, 0, r, sp.getStrandLength(r) - 1, conn) == mfeValue) {
                 mfeStructure.setStrandRank(s, 0);
                 mfeStructure.setStrandRank(r, startM - 1);
-                recBacktrack(s, 0, r, sp.getStrandLength(r) - 1, 0, startM - 1, mfeValue);
+                recBacktrack(s, 0, r, sp.getStrandLength(r) - 1,  conn, 0, startM - 1, mfeValue);
                 return mfeStructure;
             }
         }
         }
         return mfeStructure;
     }
-    private boolean recBacktrack(int s, int i, int r, int j, int left, int right, int val) {
+    private boolean recBacktrack(int s, int i, int r, int j, boolean c, int left, int right, double val) {
         System.out.println("-------------");
         System.out.printf("New Backtrack with: %s, %s, %s, %s", left, i, right, j);
         System.out.println("-------------");
@@ -141,101 +148,105 @@ public class DP {
         int m = right - left + 1;
         // unpaired
         if (i + 1 < sp.getStrandLength(s)){
-            if (sp.getM(m, s, i + 1, r, j) == val) return recBacktrack(s, i + 1, r, j, left, right, val);
+            if (sp.getM(m, s, i + 1, r, j, c) == val) return recBacktrack(s, i + 1, r, j, c, left, right, val);
         }
         else{
             if (m == 2) {
-                if (sp.getM(m - 1, r, 0, r, j) == val) return recBacktrack(r, 0, r, j, right, right, val);
+                if (sp.getM(1, r, 0, r, j, false) == val) return recBacktrack(r, 0, r, j, false, right, right, val);
             }
             else for (int t = 0; t < sp.getNumStrands(); t++)
-            if (sp.getM(m - 1, t, 0, r, j) == val) {
+            if (sp.getM(m - 1, t, 0, r, j, conn) == val) {
                 mfeStructure.setStrandRank(t, left+1);
-                return recBacktrack(t, 0, r, j, left + 1, right, val);
+                return recBacktrack(t, 0, r, j, conn,left + 1, right, val);
             }
         }
-        // stack
-        /*if (backtrackHelper(m, s, i, r, j, left, right, val - E(s, i, r, j))) {
-            mfeStructure.setBasePair(left, i, right, j);
-            return true;
-        }*/
         // multiloop
-        return backtrackMultiloop(m, s, i, r, j, left, right, val);
+        return backtrackMultiloop(m, s, i, r, j, c, left, right, val);
     }
-    private boolean backtrackMultiloop(int m, int s, int i, int r, int j, int left, int right, int val){
+    private boolean backtrackMultiloop(int m, int s, int i, int r, int j, boolean c, int left, int right, double val){
         for (int mm = 1; mm <= m; mm++){
             if (mm == 1){
                 int lim = sp.getStrandLength(s);
                 if (m == 1) lim = j;
                 for (int k = i + theta + 1; k < lim; k++){
-                    int cand = E(s, i, s, k) + M(1, s, i, s, k) + M(m, s, k, r, j+1);
-                    if (val == cand){
+                    double m1 = M(1, s, i, s, k, false);
+                    double m2 = M(m, s, k, r, j+1, m>1 && c);
+                    if (bp(s,i,s,k) && val == dpt.sum(dpt.sum(dpt.E(), m1), m2)){
                         mfeStructure.setBasePair(left, i, left, k);
-                        return     backtrackHelper(m, s, i, s, k, left, left, M(1, s, i, s, k))
-                                && backtrackHelper(m, s, k, r, j+1, left, right, M(m, s, k, r, j+1));
+                        return     backtrackHelper(m, s, i, s, k, false, left, left, m1)
+                                && backtrackHelper(m, s, k, r, j+1, (m>1 && c), left, right, m2);
                 }
                 }
             }
             else if (mm == m){
                 for (int k = 0; k <= j; k++){
-                    int cand = E(s, i, r, k) + M(m, s, i, r, k) + M(1, r, k, r, j+1);
-                    if (val == cand){
+                    double m1 = M(m, s, i, r, k, false);
+                    double m2 = M(1, r, k, r, j+1, false);
+                    if (bp(s,i,r,k) && val == dpt.sum(dpt.sum(dpt.E(), m1),m2)){
                         mfeStructure.setBasePair(left, i, right, k);
-                        return     backtrackHelper(m, s, i, r, k, left, right, M(m, s, i, r, k))
-                                && backtrackHelper(1, r, k, r, j+1, right, right, M(1, r, k, r, j+1));
+                        return     backtrackHelper(m, s, i, r, k, false, left, right, m1)
+                                && backtrackHelper(1, r, k, r, j+1, false, right, right, m2);
                 }}
             }
             else for (int t = 0; t < sp.getNumStrands(); t++){
                     for (int k = 0; k < sp.getStrandLength(t); k++){
-                        int cand = E(s, i, t, k) + M(mm, s, i, t, k) + M(m-mm+1, t, k, r, j+1);
-                        if (val == cand){
+                        double m1 = M(mm, s, i, t, k, false);
+                        double m2 = M(m-mm+1, t, k, r, j+1, c);
+                        if (bp(s,i,t,k) && val == dpt.sum(dpt.sum(dpt.E(),m1), m2)){
                             mfeStructure.setBasePair(left, i, left+mm-1, k);
                             mfeStructure.setStrandRank(t, left + mm - 1);
-                            return     backtrackHelper(mm, s, i, t, k, left, left + mm - 1, M(mm, s, i, t, k))
-                                    && backtrackHelper(m-mm+1, t, k, r, j+1, left + mm - 1, right, M(m-mm+1, t, k, r, j+1));
+                            return     backtrackHelper(mm, s, i, t, k, false, left, left + mm - 1, m1)
+                                    && backtrackHelper(m-mm+1, t, k, r, j+1, c, left + mm - 1, right, m2);
                     }}
                 }
         }
         System.out.println("Cannot find the follow-up DP decision");
         return false;
     }
-    private boolean backtrackHelper(int m, int s, int i, int r, int j, int left, int right, int val){
+    private boolean backtrackHelper(int m, int s, int i, int r, int j, boolean c, int left, int right, double val){
         if (m == 1){
             if (j - i < 3) return true; // empty region
-            if (j > 0 && i+1 < sp.getStrandLength(s) && sp.getM(1, s, i+1, s, j-1) == val){
-            return recBacktrack(s, i+1, s, j-1, left, right, val);
+            if (j > 0 && i+1 < sp.getStrandLength(s) && sp.getM(1, s, i+1, s, j-1, false) == val){
+            return recBacktrack(s, i+1, s, j-1, false, left, right, val);
         }
         }
         else if (j > 0){
             if (i+1 < sp.getStrandLength(s)){
-                if (sp.getM(m, s, i+1, r, j-1) == val){
-                    return recBacktrack(s, i+1, r, j-1, left, right, val);
+                if (sp.getM(m, s, i+1, r, j-1, c) == val){
+                    return recBacktrack(s, i+1, r, j-1, c, left, right, val);
                 }
             }
             else if (m == 2){
-                if (sp.getM(1, r, 0, r, j-1) == val){
-                    return recBacktrack(r, 0, r, j-1, right, right, sp.getM(1, r, 0, r, j-1));
+                if (sp.getM(1, r, 0, r, j-1, false) == val){
+                    return recBacktrack(r, 0, r, j-1, false, right, right, sp.getM(1, r, 0, r, j-1, false));
                 }
             }
-            else for (int t = 0; t < sp.getNumStrands(); t++) if (sp.getM(m-1, t, 0, r, j-1) == val){
-                mfeStructure.setStrandRank(t, left+1);
-                return recBacktrack(t, 0, r, j-1, left+1, right, sp.getM(m-1, t, 0, r, j-1));
-            }
+            else for (int t = 0; t < sp.getNumStrands(); t++){
+                double m1 = sp.getM(m-1, t, 0, r, j-1, conn);
+                if (m1 == val){
+                        mfeStructure.setStrandRank(t, left+1);
+                        return recBacktrack(t, 0, r, j-1, conn,left+1, right, m1);
+                    }
+                }
         }
         else{
             if (i+1 < sp.getStrandLength(s)){
                 if (m==2) {
-                    if (sp.getM(1, s, i + 1, s, sp.getStrandLength(s) - 1) == val) {
-                        return recBacktrack(s, i + 1, s, sp.getStrandLength(s) - 1, left, left, sp.getM(1, s, i + 1, s, sp.getStrandLength(s) - 1));
+                    if (sp.getM(1, s, i + 1, s, sp.getStrandLength(s) - 1, false) == val) {
+                        return recBacktrack(s, i + 1, s, sp.getStrandLength(s) - 1, false, left, left, sp.getM(1, s, i + 1, s, sp.getStrandLength(s) - 1, false));
                     }
                 }
-                else for (int u = 0; u < sp.getNumStrands(); u++) if (sp.getM(m-1, s, i, u, sp.getStrandLength(u)-1) == val){
-                    mfeStructure.setStrandRank(u, right-1);
-                    return recBacktrack(s, i, u, sp.getStrandLength(u)-1, left, right-1, sp.getM(m-1, s, i, u, sp.getStrandLength(u)-1));
+                else for (int u = 0; u < sp.getNumStrands(); u++){
+                    double m1 = sp.getM(m-1, s, i, u, sp.getStrandLength(u)-1, conn);
+                    if (m1 == val){
+                        mfeStructure.setStrandRank(u, right-1);
+                        return recBacktrack(s, i, u, sp.getStrandLength(u)-1, conn, left, right-1, m1);
+                    }
                 }
             }
-            if (m <= 2) return true; //empty region
+            return m <= 2; //empty region
         }
-        System.out.printf("!!!!!!! -- %s %s %s %s -- ", left, i, right, j);
+        //System.out.printf("!!!!!!! -- %s %s %s %s -- ", left, i, right, j);
         return false;
     }
 }

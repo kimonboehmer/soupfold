@@ -2,7 +2,7 @@ import java.util.*;
 
 public class TripletPool implements StrandPool {
     private static final byte REPEAT_LENGTH = 3;
-    protected class Triplet {
+    protected static class Triplet {
         int pattern;
         int repeats;
         protected Triplet(int pattern, int repeats){
@@ -11,10 +11,13 @@ public class TripletPool implements StrandPool {
         }
     }
     int maxRepeats;
+    int minRepeats;
     int numPatterns;
-    private Base[][] patternArray;
+    private int minDiff;
+    private int maxDiff;
+    private final Base[][] patternArray;
     private final Triplet[] pool;
-    int[][][][][] M;
+    double[][][][][][] M;
     public TripletPool(Base[] pattern, int mid, int rad){
         assert mid > rad;
         pool = new Triplet[2 * rad + 1];
@@ -26,10 +29,12 @@ public class TripletPool implements StrandPool {
         patternArray = new Base[][]{pattern};
         numPatterns = 1;
         maxRepeats = mid + rad;
+        minRepeats = mid - rad;
     }
     public TripletPool(List<String> strands){
         pool = new Triplet[strands.size()];
         maxRepeats = 0;
+        minRepeats = 100000;
         HashMap<Base[], Integer> hm = new HashMap<>();
         int counter = 0;
         int i = 0;
@@ -51,6 +56,7 @@ public class TripletPool implements StrandPool {
             }
             int reps = Integer.parseInt(strand.substring(REPEAT_LENGTH));
             if (maxRepeats < reps) maxRepeats = reps;
+            if (minRepeats > reps) minRepeats = reps;
             Triplet t = new Triplet(val, reps);
             pool[i++] = t;
         }
@@ -60,16 +66,19 @@ public class TripletPool implements StrandPool {
             patternArray[entry.getValue()] = entry.getKey();
         }
     }
-    public void initializeTable(int m, int theta){
-        M = new int[m+1][numPatterns][maxRepeats * REPEAT_LENGTH][numPatterns][maxRepeats * 3];
+    public void initializeTable(int m, int theta, double initValue){
+        M = new double[m+1][numPatterns][maxRepeats * REPEAT_LENGTH][numPatterns][maxRepeats * 3][2];
         for(int si=0;si<numPatterns;si++)for(int ii=0;ii<maxRepeats * REPEAT_LENGTH;ii++)for(int ri=0;ri<numPatterns;ri++)for(int ji=0;ji<maxRepeats * REPEAT_LENGTH;ji++){
-            for (int mi = 1; mi < m+1;mi++)M[mi][si][ii][ri][ji]=DP.NOT_SET;
-            M[0][si][ii][ri][ji] = 0;
+            for (int mi = 1; mi < m+1;mi++){
+                M[mi][si][ii][ri][ji][0]=DP.NOT_SET;
+                M[mi][si][ii][ri][ji][1]=DP.NOT_SET;
+            }
+            M[0][si][ii][ri][ji][0] = initValue;
         }
         for (int i = 0; i < maxRepeats * REPEAT_LENGTH; i++){
             for (int t = 0; t < Math.min(theta, maxRepeats * REPEAT_LENGTH - i); t++){
                 for (int p = 0; p < numPatterns; p++){
-                    M[1][p][i][p][i + t] = 0;
+                    M[1][p][i][p][i + t][0] = initValue;
                 }
             }
         }
@@ -78,11 +87,11 @@ public class TripletPool implements StrandPool {
         if (pos > pool[s].repeats * REPEAT_LENGTH) throw new InputMismatchException("Position greater than strand length!");
         return patternArray[pool[s].pattern][pos % REPEAT_LENGTH];
     }
-    public int getM(int m, int s, int i, int r, int j){
-        return M[m][pool[s].pattern][i][pool[r].pattern][j];
+    public double getM(int m, int s, int i, int r, int j, boolean c){
+        return M[m][pool[s].pattern][i][pool[r].pattern][j][c ? 1 : 0];
     }
-    public void setM(int m, int s, int i, int r, int j, int val){
-        M[m][pool[s].pattern][i][pool[r].pattern][j] = val;
+    public void setM(int m, int s, int i, int r, int j, boolean c, double val){
+        M[m][pool[s].pattern][i][pool[r].pattern][j][c ? 1 : 0] = val;
     }
     public int getStrandLength(int s){
         return pool[s].repeats * REPEAT_LENGTH;
@@ -94,5 +103,11 @@ public class TripletPool implements StrandPool {
         char[] triplet = new char[REPEAT_LENGTH * pool[strand].repeats];
         for (int i = 0; i < triplet.length; i++) triplet[i] = patternArray[pool[strand].pattern][i % REPEAT_LENGTH].toChar();
         return new String(triplet);
+    }
+    public int getMinDiff(){
+        return minDiff;
+    }
+    public int getMaxDiff(){
+        return maxDiff;
     }
 }

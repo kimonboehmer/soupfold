@@ -77,7 +77,7 @@ public class SecondaryStructure {
             e.printStackTrace();
         }
         try {
-            FileWriter myWriter = new FileWriter("structure_" + name +  ".txt");
+            FileWriter myWriter = new FileWriter("structure_" + name +  ".sest");
             myWriter.write(toString());
             myWriter.close();
             System.out.println("Successfully wrote to the file.");
