@@ -1,5 +1,7 @@
 package datastructures;
 
+import java.util.InputMismatchException;
+
 public enum Base {
     A,C,G,U;
     private static final boolean[][] BASEPAIRS = new boolean[][]{
@@ -13,5 +15,14 @@ public enum Base {
     }
     public char toChar(){
         return CHARS[this.ordinal()];
+    }
+    public static Base toBase(char c){
+        switch (c){
+            case 'A': return Base.A;
+            case 'C': return Base.C;
+            case 'G': return Base.G;
+            case 'U': return Base.U;
+            default: throw new InputMismatchException("Invalid strand");
+        }
     }
 }

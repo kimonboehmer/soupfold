@@ -1,16 +1,15 @@
 package algorithms;
-
-import algorithms.DPType;
 import datastructures.Base;
 import datastructures.SecondaryStructure;
 import datastructures.StrandPool;
 
 public class DP {
     private final StrandPool sp;
+    private boolean BACKTRACK;
     public static final int NOT_SET = 100000;
     double mfeValue;
     DPType dpt;
-    private int startM;
+    private final int startM;
     double partFuncValue;
     int theta;
     int avg;
@@ -25,6 +24,7 @@ public class DP {
         this.conn = conn;
         this.avg = avg;
         this.dpt = dpt;
+        this.BACKTRACK = false;
     }
     private double minOverStrands(int m, int r, int j, int diff){
         double res = 0;
@@ -54,14 +54,14 @@ public class DP {
                 if (sp.getStrandLength(r) - avg > diff) return dpt.noEffect();
                 return getOrComputeM(1, r, 0, r, j-1, false, 0);
             }
-            return minOverStrands(m-1, r, j-1, diff - (avg - sp.getStrandLength(s)));
+            return minOverStrands(m-1, r, j-1, diff - (sp.getStrandLength(s) - avg));
         }
         if (i+1 < sp.getStrandLength(s)){
             if (m==2) {
                 if (sp.getStrandLength(r) - avg > diff) return dpt.noEffect();
                 return getOrComputeM(1, s, i+1, s, sp.getStrandLength(s)-1, false, diff);
             }
-            return minOverSecStrands(m-1, s, i+1, diff - (avg - sp.getStrandLength(r)));
+            return minOverSecStrands(m-1, s, i+1, diff - (sp.getStrandLength(r) - avg));
         }
         return 0;
     }
@@ -92,7 +92,7 @@ public class DP {
             else for (int t = 0; t < sp.getNumStrands(); t++){
                 for (int diff1 = -(mm - 2) * sp.getMinDiff(); diff1 <= (mm - 2) * sp.getMaxDiff(); diff1++)
                     for (int k = 0; k < sp.getStrandLength(t); k++) if(bp(s, i, t, k)){
-                        double val = dpt.sum(dpt.sum(dpt.E(), M(mm, s, i, t, k, false, diff1 + 2 * avg - sp.getStrandLength(s) - sp.getStrandLength(t))), M(m-mm+1, t, k, r, j+1, c ,diff - diff1 - (avg - sp.getStrandLength(s))));
+                        double val = dpt.sum(dpt.sum(dpt.E(), M(mm, s, i, t, k, false, diff1 + (sp.getStrandLength(s) - avg) + (sp.getStrandLength(t) - avg))), M(m-mm+1, t, k, r, j+1, c ,diff - diff1 - ( sp.getStrandLength(s) - avg)));
                         mfe = dpt.min(mfe, val);
                     }
                 }
@@ -116,7 +116,7 @@ public class DP {
             if (sp.getStrandLength(r) - avg > diff) unpaired = dpt.noEffect();
             else unpaired = getOrComputeM(1, r, 0, r, j, false, diff);
         }
-        else unpaired = minOverStrands(m - 1, r, j, diff - (avg - sp.getStrandLength(s)));
+        else unpaired = minOverStrands(m - 1, r, j, diff - (sp.getStrandLength(s) - avg));
         double multi = computeMultiloop(m, s, i, r, j, c, diff);
         double mfe = dpt.min(unpaired, multi);
         sp.setM(m, s, i, r, j, c, diff, mfe);
@@ -124,7 +124,7 @@ public class DP {
     }
     private double getOrComputeM(int m, int s, int i, int r, int j, boolean c, int diff){
         double val = sp.getM(m, s, i, r, j, c, diff);
-        if (val == NOT_SET){
+        if (val == NOT_SET && !BACKTRACK){
             val = computeMFERegion(m, s, i, r, j, c, diff);
         }
         return val;
@@ -151,6 +151,7 @@ public class DP {
      * @return one optimal secondary structure
      */
     public SecondaryStructure backtrack(){
+        BACKTRACK = true;
         mfeStructure = new SecondaryStructure(sp, startM);
         for (int s = 0; s < sp.getNumStrands(); s++){
             if (startM == 1){ // in case m = 1, the start- and end-strand has to be the same
@@ -187,7 +188,7 @@ public class DP {
                 if (sp.getM(1, r, 0, r, j, false, diff) == val) return recBacktrack(r, 0, r, j, false, diff, right, right, val);
             }
             else {
-                int newDiff = diff - (avg - sp.getStrandLength(s));
+                int newDiff = diff - (sp.getStrandLength(s) - avg);
                 for (int t = 0; t < sp.getNumStrands(); t++){
                     if (sp.getM(m - 1, t, 0, r, j, conn, newDiff) == val) {
                         mfeStructure.setStrandRank(t, left+1);
@@ -227,8 +228,8 @@ public class DP {
             else for (int t = 0; t < sp.getNumStrands(); t++) {
                     for (int diff1 = -(mm - 2) * sp.getMinDiff(); diff1 <= (mm - 2) * sp.getMaxDiff(); diff1++) {
                         for (int k = 0; k < sp.getStrandLength(t); k++) {
-                            int d1 = diff1 + 2 * avg - sp.getStrandLength(s) - sp.getStrandLength(t);
-                            int d2 = diff - diff1 - (avg - sp.getStrandLength(s));
+                            int d1 = diff1 + (sp.getStrandLength(s) - avg) + (sp.getStrandLength(t) - avg);
+                            int d2 = diff - diff1 - (sp.getStrandLength(s) - avg) ;
                             double m1 = M(mm, s, i, t, k, false, d1);
                             double m2 = M(m - mm + 1, t, k, r, j + 1, c, d2);
                             if (bp(s, i, t, k) && val == dpt.sum(dpt.sum(dpt.E(), m1), m2)) {
@@ -263,10 +264,11 @@ public class DP {
                 }
             }
             else for (int t = 0; t < sp.getNumStrands(); t++){
-                double m1 = sp.getM(m-1, t, 0, r, j-1, conn, diff - (avg - sp.getStrandLength(s)));
+                int d = diff - (sp.getStrandLength(s) - avg);
+                double m1 = sp.getM(m-1, t, 0, r, j-1, conn, d);
                 if (m1 == val){
                         mfeStructure.setStrandRank(t, left+1);
-                        return recBacktrack(t, 0, r, j-1, conn,diff - (avg - sp.getStrandLength(s)), left+1, right, m1);
+                        return recBacktrack(t, 0, r, j-1, conn,d, left+1, right, m1);
                     }
                 }
         }
@@ -278,10 +280,11 @@ public class DP {
                     }
                 }
                 else for (int u = 0; u < sp.getNumStrands(); u++){
-                    double m1 = sp.getM(m-1, s, i, u, sp.getStrandLength(u)-1, conn, diff - (avg - sp.getStrandLength(r)));
+                    int d = diff - (sp.getStrandLength(r) - avg);
+                    double m1 = sp.getM(m-1, s, i, u, sp.getStrandLength(u)-1, conn, d);
                     if (m1 == val){
                         mfeStructure.setStrandRank(u, right-1);
-                        return recBacktrack(s, i, u, sp.getStrandLength(u)-1, conn, diff - (avg - sp.getStrandLength(r)), left, right-1, m1);
+                        return recBacktrack(s, i, u, sp.getStrandLength(u)-1, conn, d, left, right-1, m1);
                     }
                 }
             }

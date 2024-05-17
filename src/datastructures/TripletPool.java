@@ -42,15 +42,10 @@ public class TripletPool implements StrandPool {
         int counter = 0;
         int i = 0;
         for (String strand : strands){
+            char[] strandChars = strand.toCharArray();
             Base[] pattern = new Base[REPEAT_LENGTH];
             for (int j = 0; j < REPEAT_LENGTH; j++){
-                switch (strand.toCharArray()[j]){
-                    case 'A': pattern[j] = Base.A;break;
-                    case 'C': pattern[j] = Base.C;break;
-                    case 'G': pattern[j] = Base.G;break;
-                    case 'U': pattern[j] = Base.U;break;
-                    default: throw new InputMismatchException("Invalid strand");
-                }
+                pattern[j] = Base.toBase(strandChars[j]);
             }
             Integer val = hm.get(pattern);
             if (val == null){

@@ -54,9 +54,17 @@ public class Experiments {
     public static int randomLengthTriplets(String p, int avg, int num){
         LinkedList<String> strands = new LinkedList<>();
         Random r = new Random();
-        for (int i = 0; i < num; i++){
-            strands.add(p + (r.nextInt(avg/2) + (avg-avg/4)));
+        int missing = avg * num;
+        for (int i = 0; i < num - 1; i++){
+            int rand = r.nextInt(avg/2) + (avg-avg/4);
+            missing -= rand;
+            if (missing < 0) {
+                strands.add(p + (rand + missing));
+                break;
+            }
+            strands.add(p + rand);
         }
+        strands.add(p + missing);
         StrandPool sp = new TripletPool(strands);
         DP dp = new DP(sp, 4, 3, true, avg*3, new MFE());
         int a = (int) dp.computeMFE();

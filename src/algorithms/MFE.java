@@ -5,7 +5,7 @@ import algorithms.DPType;
 public class MFE implements DPType {
     @Override
     public double noEffect(){
-        return 0;
+        return INFTY;
     }
     @Override
     public double initValue(){
