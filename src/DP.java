@@ -60,13 +60,16 @@ public class DP {
             if (mm == 1){
                 int lim = sp.getStrandLength(s);
                 if (m == 1) lim = j;
-                for (int k = i + theta + 1; k < lim; k++) if (bp(s,i,r,j)){
-                    double val = dpt.sum(dpt.sum(dpt.E(), M(1, s, i, s, k, false)), M(m, s, k, r, j+1, (m > 1) && c));
-                    mfe = dpt.min(mfe, val);
+                for (int k = i + theta + 1; k <= lim; k++) {
+                    //System.out.println(k);
+                    if (bp(s,i,s,k)){
+                        double val = dpt.sum(dpt.sum(dpt.E(), M(1, s, i, s, k, false)), M(m, s, k, r, j+1, (m > 1) && c));
+                        mfe = dpt.min(mfe, val);
+                    }
                 }
             }
             else if (mm == m){
-                for (int k = 0; k <= j; k++) if (bp(s,i,r,j)){
+                for (int k = 0; k <= j; k++) if (bp(s,i,r,k)){
                     double val = dpt.sum(dpt.sum(dpt.E(), M(m, s, i, r, k, false)),M(1, r, k, r, j+1, false));
                     mfe = dpt.min(mfe, val);
                 }
@@ -112,7 +115,11 @@ public class DP {
         sp.initializeTable(m, theta, dpt.initValue());
         double mfe = 0;
         for (int s = 0; s < sp.getNumStrands(); s++) {
-            for (int r = 0; r < sp.getNumStrands(); r++) {
+            if (m == 1){
+                double val = getOrComputeM(m, s, 0, s, sp.getStrandLength(s) - 1, false);
+                mfe = dpt.min(mfe, val);
+            }
+            else for (int r = 0; r < sp.getNumStrands(); r++) {
                 double val = getOrComputeM(m, s, 0, r, sp.getStrandLength(r) - 1, conn);
                 mfe = dpt.min(mfe, val);
             }
@@ -128,7 +135,14 @@ public class DP {
     public SecondaryStructure backtrack(){
         mfeStructure = new SecondaryStructure(sp, startM);
         for (int s = 0; s < sp.getNumStrands(); s++){
-        for (int r = 0; r < sp.getNumStrands(); r++) {
+            if (startM == 1){ // in case m = 1, the start- and end-strand has to be the same
+                if (sp.getM(startM, s, 0, s, sp.getStrandLength(s) - 1, false) == mfeValue) {
+                    mfeStructure.setStrandRank(s, 0);
+                    recBacktrack(s, 0, s, sp.getStrandLength(s) - 1,  false, 0, 0, mfeValue);
+                    return mfeStructure;
+                }
+            }
+        else for (int r = 0; r < sp.getNumStrands(); r++) {
             if (sp.getM(startM, s, 0, r, sp.getStrandLength(r) - 1, conn) == mfeValue) {
                 mfeStructure.setStrandRank(s, 0);
                 mfeStructure.setStrandRank(r, startM - 1);
@@ -140,9 +154,9 @@ public class DP {
         return mfeStructure;
     }
     private boolean recBacktrack(int s, int i, int r, int j, boolean c, int left, int right, double val) {
-        System.out.println("-------------");
+        /*System.out.println("-------------");
         System.out.printf("New Backtrack with: %s, %s, %s, %s", left, i, right, j);
-        System.out.println("-------------");
+        System.out.println("-------------");*/
         if (val == 0) return true;
         if (left == right && j - i <= theta) return true;
         int m = right - left + 1;
@@ -168,7 +182,7 @@ public class DP {
             if (mm == 1){
                 int lim = sp.getStrandLength(s);
                 if (m == 1) lim = j;
-                for (int k = i + theta + 1; k < lim; k++){
+                for (int k = i + theta + 1; k <= lim; k++){
                     double m1 = M(1, s, i, s, k, false);
                     double m2 = M(m, s, k, r, j+1, m>1 && c);
                     if (bp(s,i,s,k) && val == dpt.sum(dpt.sum(dpt.E(), m1), m2)){
