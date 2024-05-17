@@ -5,7 +5,7 @@ public class PartitionFunction implements DPType{
         this.bpContrib = Math.exp(- 1.0 / (temperature * BOLTZMANN_CONSTANT));
     }
     public double noEffect(){
-        return INFTY;
+        return 1.0;
     }
     public double initValue() {
         return 1.0;

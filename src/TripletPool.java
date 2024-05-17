@@ -15,9 +15,11 @@ public class TripletPool implements StrandPool {
     int numPatterns;
     private int minDiff;
     private int maxDiff;
+    private int avg;
+    private int diffRange;
     private final Base[][] patternArray;
     private final Triplet[] pool;
-    double[][][][][][] M;
+    double[][][][][][][] M;
     public TripletPool(Base[] pattern, int mid, int rad){
         assert mid > rad;
         pool = new Triplet[2 * rad + 1];
@@ -66,19 +68,22 @@ public class TripletPool implements StrandPool {
             patternArray[entry.getValue()] = entry.getKey();
         }
     }
-    public void initializeTable(int m, int theta, double initValue){
-        M = new double[m+1][numPatterns][maxRepeats * REPEAT_LENGTH][numPatterns][maxRepeats * 3][2];
+    public void initializeTable(int m, int theta, double initValue, int avg){
+        minDiff = m * (avg - minRepeats*3);
+        maxDiff = m * (maxRepeats*3 - avg);
+        diffRange = minDiff + 1 + maxDiff;
+        M = new double[m+1][numPatterns][maxRepeats * REPEAT_LENGTH][numPatterns][maxRepeats * 3][2][diffRange];
         for(int si=0;si<numPatterns;si++)for(int ii=0;ii<maxRepeats * REPEAT_LENGTH;ii++)for(int ri=0;ri<numPatterns;ri++)for(int ji=0;ji<maxRepeats * REPEAT_LENGTH;ji++){
-            for (int mi = 1; mi < m+1;mi++){
-                M[mi][si][ii][ri][ji][0]=DP.NOT_SET;
-                M[mi][si][ii][ri][ji][1]=DP.NOT_SET;
+            for (int mi = 1; mi < m+1;mi++) for (int di = 0; di < diffRange; di++){
+                M[mi][si][ii][ri][ji][0][di]=DP.NOT_SET;
+                M[mi][si][ii][ri][ji][1][di]=DP.NOT_SET;
             }
-            M[0][si][ii][ri][ji][0] = initValue;
+            M[0][si][ii][ri][ji][0][minDiff] = initValue;
         }
         for (int i = 0; i < maxRepeats * REPEAT_LENGTH; i++){
             for (int t = 0; t < Math.min(theta, maxRepeats * REPEAT_LENGTH - i); t++){
                 for (int p = 0; p < numPatterns; p++){
-                    M[1][p][i][p][i + t][0] = initValue;
+                    M[1][p][i][p][i + t][0][minDiff] = initValue;
                 }
             }
         }
@@ -87,11 +92,11 @@ public class TripletPool implements StrandPool {
         if (pos > pool[s].repeats * REPEAT_LENGTH) throw new InputMismatchException("Position greater than strand length!");
         return patternArray[pool[s].pattern][pos % REPEAT_LENGTH];
     }
-    public double getM(int m, int s, int i, int r, int j, boolean c){
-        return M[m][pool[s].pattern][i][pool[r].pattern][j][c ? 1 : 0];
+    public double getM(int m, int s, int i, int r, int j, boolean c, int diff){
+        return M[m][pool[s].pattern][i][pool[r].pattern][j][c ? 1 : 0][diff + minDiff];
     }
-    public void setM(int m, int s, int i, int r, int j, boolean c, double val){
-        M[m][pool[s].pattern][i][pool[r].pattern][j][c ? 1 : 0] = val;
+    public void setM(int m, int s, int i, int r, int j, boolean c, int diff, double val){
+        M[m][pool[s].pattern][i][pool[r].pattern][j][c ? 1 : 0][diff + minDiff] = val;
     }
     public int getStrandLength(int s){
         return pool[s].repeats * REPEAT_LENGTH;
