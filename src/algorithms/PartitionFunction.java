@@ -1,4 +1,8 @@
-public class PartitionFunction implements DPType{
+package algorithms;
+
+import algorithms.DPType;
+
+public class PartitionFunction implements DPType {
     double bpContrib;
     final double BOLTZMANN_CONSTANT = 0.001987;
     public PartitionFunction(double temperature){

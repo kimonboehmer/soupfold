@@ -1,6 +1,12 @@
+package algorithms;
+
+import algorithms.DPType;
+import datastructures.Base;
+import datastructures.SecondaryStructure;
+import datastructures.StrandPool;
+
 public class DP {
     private final StrandPool sp;
-    private final int INFTY = Integer.MAX_VALUE / 4;
     public static final int NOT_SET = 100000;
     double mfeValue;
     DPType dpt;
@@ -10,12 +16,12 @@ public class DP {
     int avg;
     private final boolean conn;
     SecondaryStructure mfeStructure;
-    public DP(StrandPool sp, int theta, boolean conn, int avg, DPType dpt){
+    public DP(StrandPool sp, int m, int theta, boolean conn, int avg, DPType dpt){
         this.sp = sp;
         this.theta = theta;
         mfeValue = NOT_SET;
         partFuncValue = 0;
-        startM = 0;
+        startM = m;
         this.conn = conn;
         this.avg = avg;
         this.dpt = dpt;
@@ -123,17 +129,16 @@ public class DP {
         }
         return val;
     }
-    public double computeMFE(int m){
-        startM = m;
-        sp.initializeTable(m, theta, dpt.initValue(), avg);
+    public double computeMFE(){
+        sp.initializeTable(startM, theta, dpt.initValue(), avg);
         double mfe = 0;
         for (int s = 0; s < sp.getNumStrands(); s++) {
-            if (m == 1){
-                double val = getOrComputeM(m, s, 0, s, sp.getStrandLength(s) - 1, false, 0);
+            if (startM == 1){
+                double val = getOrComputeM(startM, s, 0, s, sp.getStrandLength(s) - 1, false, 0);
                 mfe = dpt.min(mfe, val);
             }
             else for (int r = 0; r < sp.getNumStrands(); r++) {
-                double val = getOrComputeM(m, s, 0, r, sp.getStrandLength(r) - 1, conn, 0);
+                double val = getOrComputeM(startM, s, 0, r, sp.getStrandLength(r) - 1, conn, 0);
                 mfe = dpt.min(mfe, val);
             }
         }
@@ -142,7 +147,7 @@ public class DP {
     }
 
     /**
-     * assumes that the DP table is already filled (i.e. computeMFE already executed)!
+     * assumes that the algorithms.DP table is already filled (i.e. computeMFE already executed)!
      * @return one optimal secondary structure
      */
     public SecondaryStructure backtrack(){
@@ -236,7 +241,7 @@ public class DP {
                     }
                 }
         }
-        System.out.println("Cannot find the follow-up DP decision");
+        System.out.println("Cannot find the follow-up algorithms.DP decision");
         return false;
     }
     private boolean backtrackHelper(int m, int s, int i, int r, int j, boolean c, int diff, int left, int right, double val){

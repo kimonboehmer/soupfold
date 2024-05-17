@@ -1,3 +1,5 @@
+package datastructures;
+
 public enum Base {
     A,C,G,U;
     private static final boolean[][] BASEPAIRS = new boolean[][]{

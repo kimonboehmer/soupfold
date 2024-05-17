@@ -1,3 +1,7 @@
+package datastructures;
+
+import datastructures.Base;
+
 public interface StrandPool {
 int getNumStrands();
 double getM(int m, int s, int i, int r, int j, boolean c, int diff);

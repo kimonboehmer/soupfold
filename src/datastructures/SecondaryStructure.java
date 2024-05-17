@@ -1,3 +1,5 @@
+package datastructures;
+
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -34,11 +36,6 @@ public class SecondaryStructure {
      * @param j the position of the base on the right strand
      */
     public void setBasePair(int s, int i, int r, int j){
-        /*System.out.println("----");
-        System.out.println(s);
-        System.out.println(i);
-        System.out.println(r);
-        System.out.println(j);*/
         if (partner[s][i] != null || partner[r][j] != null) throw new RuntimeException("Position already paired!");
         partner[s][i] = new Position(r, j);
         partner[r][j] = new Position(s, i);
@@ -66,7 +63,7 @@ public class SecondaryStructure {
     }
     public void toFile(String name){
         try {
-            File myObj = new File("structure_" + name +  ".txt");
+            File myObj = new File("../out/structure_" + name +  ".sest");
             if (myObj.createNewFile()) {
                 System.out.println("File created: " + myObj.getName());
             } else {
