@@ -11,10 +11,11 @@ public class Main {
         System.out.println(dp.backtrack());
     }
     public static void testPartitionFunction(){
-        StrandPool sp = new TripletPool(new Base[]{Base.C, Base.A, Base.G}, 27, 1);
-        DP dp = new DP(sp, 3, true, new PartitionFunction(300));
+        StrandPool sp = new TripletPool(new Base[]{Base.C, Base.A, Base.G}, 15, 1);
+        DP dp = new DP(sp, 3, true, new PartitionFunction(30000));
         System.out.println((int) dp.computeMFE(3));
         System.out.println(dp.backtrack());
+        System.out.println(dp.dpt.E());
     }
     public static void testDifferentTriplets(){
         LinkedList<Integer> results = new LinkedList<>();
@@ -36,12 +37,12 @@ public class Main {
         strands.add("GUU9");
         strands.add("ACG12");
         StrandPool sp = new TripletPool(strands);
-        DP dp = new DP(sp, 3, true, new MFE());
+        //DP dp = new DP(sp, 3, true, new MFE());
         DP dp2 = new DP(sp, 3, true, new PartitionFunction(300));
         System.out.println(dp2.computeMFE(3));
-        System.out.println(dp.computeMFE(3));
-        SecondaryStructure st = dp.backtrack();
+        //System.out.println(dp.computeMFE(3));
+        SecondaryStructure st = dp2.backtrack();
         System.out.println(st.toString());
-        st.toFile("heterodimer");
+        //st.toFile("heterodimer");
     }
 }

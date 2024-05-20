@@ -7,4 +7,5 @@ public interface DPType {
     double INFTY = 100000;
     boolean btChoose(double a);
     void btInit(double a);
+    double strandPenalty(int length);
 }

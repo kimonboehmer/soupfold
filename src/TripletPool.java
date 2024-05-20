@@ -13,8 +13,6 @@ public class TripletPool implements StrandPool {
     int maxRepeats;
     int minRepeats;
     int numPatterns;
-    private int minDiff;
-    private int maxDiff;
     private final Base[][] patternArray;
     private final Triplet[] pool;
     double[][][][][][] M;
@@ -105,11 +103,5 @@ public class TripletPool implements StrandPool {
         char[] triplet = new char[REPEAT_LENGTH * pool[strand].repeats];
         for (int i = 0; i < triplet.length; i++) triplet[i] = patternArray[pool[strand].pattern][i % REPEAT_LENGTH].toChar();
         return new String(triplet);
-    }
-    public int getMinDiff(){
-        return minDiff;
-    }
-    public int getMaxDiff(){
-        return maxDiff;
     }
 }

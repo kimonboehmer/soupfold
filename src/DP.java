@@ -40,7 +40,7 @@ public class DP {
         if (m==0) return dpt.noEffect();
         if (m==1) {
             if (i+1 < sp.getStrandLength(s) && j > 0 && j > i+1) return getOrComputeM(1, s, i+1, s, j-1, false);
-            return 0;
+            return dpt.initValue();
         }
         if (j > 0){
             if (i+1 < sp.getStrandLength(s)) return getOrComputeM(m, s, i+1, r, j-1, c);
@@ -51,7 +51,7 @@ public class DP {
             if (m==2) return getOrComputeM(1, s, i+1, s, sp.getStrandLength(s)-1, false);
             return minOverSecStrands(m-1, s, i+1);
         }
-        return 0;
+        return dpt.initValue();
     }
     private boolean bp(int s, int i, int r, int j){
         return (Base.pair(sp.getBase(s, i), sp.getBase(r, j)));

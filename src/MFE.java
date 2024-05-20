@@ -32,5 +32,10 @@ public class MFE implements DPType{
         targetVal = a;
     }
 
+    @Override
+    public double strandPenalty(int length) {
+        return 0;
+    }
+
 
 }
