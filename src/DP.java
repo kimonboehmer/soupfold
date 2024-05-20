@@ -60,7 +60,7 @@ public class DP {
         double mfe = 0;
         for (int mm = 1; mm <= m; mm++){
             if (mm == 1){
-                int lim = sp.getStrandLength(s);
+                int lim = sp.getStrandLength(s) - 1;
                 if (m == 1) lim = j;
                 for (int k = i + theta + 1; k <= lim; k++) {
                     //System.out.println(k);
@@ -191,7 +191,7 @@ public class DP {
     private boolean backtrackMultiloop(int m, int s, int i, int r, int j, boolean c, int left, int right, double val){
         for (int mm = 1; mm <= m; mm++){
             if (mm == 1){
-                int lim = sp.getStrandLength(s);
+                int lim = sp.getStrandLength(s) - 1;
                 if (m == 1) lim = j;
                 for (int k = i + theta + 1; k <= lim; k++){
                     double m1 = M(1, s, i, s, k, false);
@@ -268,10 +268,10 @@ public class DP {
                     }
                 }
                 else for (int u = 0; u < sp.getNumStrands(); u++){
-                    double v = sp.getM(m-1, s, i, u, sp.getStrandLength(u)-1, conn);
+                    double v = sp.getM(m-1, s, i+1, u, sp.getStrandLength(u)-1, conn);
                     if (dpt.btChoose(v)){
                         mfeStructure.setStrandRank(u, right-1);
-                        return recBacktrack(s, i, u, sp.getStrandLength(u)-1, conn, left, right-1, v);
+                        return recBacktrack(s, i+1, u, sp.getStrandLength(u)-1, conn, left, right-1, v);
                     }
                 }
             }

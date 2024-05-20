@@ -75,10 +75,10 @@ public class TripletPool implements StrandPool {
             }
             M[0][si][ii][ri][ji][0] = initValue;
         }
-        for (int i = 0; i < maxRepeats * REPEAT_LENGTH; i++){
-            for (int t = 0; t < Math.min(theta, maxRepeats * REPEAT_LENGTH - i); t++){
+        for (int i = 0; i < REPEAT_LENGTH; i++){
+            for (int t = 0; t <= theta; t++){
                 for (int p = 0; p < numPatterns; p++){
-                    M[1][p][i][p][i + t][0] = initValue;
+                    M[1][p][i][p][t][0] = initValue;
                 }
             }
         }
@@ -88,10 +88,12 @@ public class TripletPool implements StrandPool {
         return patternArray[pool[s].pattern][pos % REPEAT_LENGTH];
     }
     public double getM(int m, int s, int i, int r, int j, boolean c){
-        return M[m][pool[s].pattern][i][pool[r].pattern][j][c ? 1 : 0];
+        if (m == 1) return M[1][pool[s].pattern][i % REPEAT_LENGTH][pool[s].pattern][j - i][0];
+        return M[m][pool[s].pattern][getStrandLength(s) - i - 1][pool[r].pattern][j][c ? 1 : 0];
     }
     public void setM(int m, int s, int i, int r, int j, boolean c, double val){
-        M[m][pool[s].pattern][i][pool[r].pattern][j][c ? 1 : 0] = val;
+        if (m == 1) M[1][pool[s].pattern][i % REPEAT_LENGTH][pool[s].pattern][j - i][0] = val;
+        M[m][pool[s].pattern][getStrandLength(s) - i - 1][pool[r].pattern][j][c ? 1 : 0] = val;
     }
     public int getStrandLength(int s){
         return pool[s].repeats * REPEAT_LENGTH;

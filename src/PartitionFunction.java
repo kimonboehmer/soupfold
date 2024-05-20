@@ -2,12 +2,12 @@ import java.util.Random;
 
 public class PartitionFunction implements DPType{
     private double randomVal;
-    private Random r;
+    private final Random r;
     double bpContrib;
     final double BOLTZMANN_CONSTANT = 0.001987;
     public PartitionFunction(double temperature){
         this.bpContrib = Math.exp(- 1.0 / (temperature * BOLTZMANN_CONSTANT));
-        r = new Random(16728);
+        r = new Random(25);
     }
     public double noEffect(){
         return INFTY;

@@ -39,7 +39,9 @@ public class SecondaryStructure {
         System.out.println(i);
         System.out.println(r);
         System.out.println(j);*/
-        if (partner[s][i] != null || partner[r][j] != null) throw new RuntimeException("Position already paired!");
+        if (partner[s][i] != null || partner[r][j] != null) {
+            throw new RuntimeException("Position already paired!");
+        }
         partner[s][i] = new Position(r, j);
         partner[r][j] = new Position(s, i);
         numBps++;
