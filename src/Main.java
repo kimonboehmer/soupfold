@@ -2,12 +2,18 @@ import java.util.LinkedList;
 
 public class Main {
     public static void main(String[] args) {
-        testDifferentTriplets();
+        testPartitionFunction();
     }
     public static void testMFE(){
         StrandPool sp = new TripletPool(new Base[]{Base.C, Base.A, Base.G}, 27, 1);
         DP dp = new DP(sp, 3, true, new MFE());
-        System.out.println((int) dp.computeMFE(1));
+        System.out.println((int) dp.computeMFE(3));
+        System.out.println(dp.backtrack());
+    }
+    public static void testPartitionFunction(){
+        StrandPool sp = new TripletPool(new Base[]{Base.C, Base.A, Base.G}, 27, 1);
+        DP dp = new DP(sp, 3, true, new PartitionFunction(300));
+        System.out.println((int) dp.computeMFE(3));
         System.out.println(dp.backtrack());
     }
     public static void testDifferentTriplets(){

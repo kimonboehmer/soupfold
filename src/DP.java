@@ -5,6 +5,7 @@ public class DP {
     double mfeValue;
     DPType dpt;
     private int startM;
+    private double compVal;
     double partFuncValue;
     int theta;
     private final boolean conn;
@@ -17,6 +18,7 @@ public class DP {
         startM = 0;
         this.conn = conn;
         this.dpt = dpt;
+        this.compVal = 0;
     }
     private double minOverStrands(int m, int r, int j){
         double res = 0;
@@ -134,19 +136,22 @@ public class DP {
      */
     public SecondaryStructure backtrack(){
         mfeStructure = new SecondaryStructure(sp, startM);
+        dpt.btInit(mfeValue);
         for (int s = 0; s < sp.getNumStrands(); s++){
             if (startM == 1){ // in case m = 1, the start- and end-strand has to be the same
-                if (sp.getM(startM, s, 0, s, sp.getStrandLength(s) - 1, false) == mfeValue) {
+                double v = sp.getM(startM, s, 0, s, sp.getStrandLength(s) - 1, false);
+                if (dpt.btChoose(v)) {
                     mfeStructure.setStrandRank(s, 0);
-                    recBacktrack(s, 0, s, sp.getStrandLength(s) - 1,  false, 0, 0, mfeValue);
+                    recBacktrack(s, 0, s, sp.getStrandLength(s) - 1,  false, 0, 0, v);
                     return mfeStructure;
                 }
             }
         else for (int r = 0; r < sp.getNumStrands(); r++) {
-            if (sp.getM(startM, s, 0, r, sp.getStrandLength(r) - 1, conn) == mfeValue) {
+            double v = sp.getM(startM, s, 0, r, sp.getStrandLength(r) - 1, conn);
+            if (dpt.btChoose(v)) {
                 mfeStructure.setStrandRank(s, 0);
                 mfeStructure.setStrandRank(r, startM - 1);
-                recBacktrack(s, 0, r, sp.getStrandLength(r) - 1,  conn, 0, startM - 1, mfeValue);
+                recBacktrack(s, 0, r, sp.getStrandLength(r) - 1,  conn, 0, startM - 1, v);
                 return mfeStructure;
             }
         }
@@ -157,21 +162,27 @@ public class DP {
         /*System.out.println("-------------");
         System.out.printf("New Backtrack with: %s, %s, %s, %s", left, i, right, j);
         System.out.println("-------------");*/
+        dpt.btInit(val);
         if (val == 0) return true;
         if (left == right && j - i <= theta) return true;
         int m = right - left + 1;
+        if (val != sp.getM(m, s, i, r, j, c)) throw new RuntimeException("Inconsistent Backtracking - needs bug fixing.");
         // unpaired
         if (i + 1 < sp.getStrandLength(s)){
-            if (sp.getM(m, s, i + 1, r, j, c) == val) return recBacktrack(s, i + 1, r, j, c, left, right, val);
+            double v = sp.getM(m, s, i + 1, r, j, c);
+            if (dpt.btChoose(v)) return recBacktrack(s, i + 1, r, j, c, left, right, v);
         }
         else{
             if (m == 2) {
-                if (sp.getM(1, r, 0, r, j, false) == val) return recBacktrack(r, 0, r, j, false, right, right, val);
+                double v = sp.getM(1, r, 0, r, j, false);
+                if (dpt.btChoose(v)) return recBacktrack(r, 0, r, j, false, right, right, v);
             }
-            else for (int t = 0; t < sp.getNumStrands(); t++)
-            if (sp.getM(m - 1, t, 0, r, j, conn) == val) {
-                mfeStructure.setStrandRank(t, left+1);
-                return recBacktrack(t, 0, r, j, conn,left + 1, right, val);
+            else for (int t = 0; t < sp.getNumStrands(); t++) {
+                double v = sp.getM(m - 1, t, 0, r, j, conn);
+                if (dpt.btChoose(v)) {
+                    mfeStructure.setStrandRank(t, left + 1);
+                    return recBacktrack(t, 0, r, j, conn, left + 1, right, v);
+                }
             }
         }
         // multiloop
@@ -185,9 +196,9 @@ public class DP {
                 for (int k = i + theta + 1; k <= lim; k++){
                     double m1 = M(1, s, i, s, k, false);
                     double m2 = M(m, s, k, r, j+1, m>1 && c);
-                    if (bp(s,i,s,k) && val == dpt.sum(dpt.sum(dpt.E(), m1), m2)){
+                    if (bp(s,i,s,k) && dpt.btChoose(dpt.sum(dpt.sum(dpt.E(), m1), m2))){
                         mfeStructure.setBasePair(left, i, left, k);
-                        return     backtrackHelper(m, s, i, s, k, false, left, left, m1)
+                        return     backtrackHelper(1, s, i, s, k, false, left, left, m1)
                                 && backtrackHelper(m, s, k, r, j+1, (m>1 && c), left, right, m2);
                 }
                 }
@@ -196,7 +207,7 @@ public class DP {
                 for (int k = 0; k <= j; k++){
                     double m1 = M(m, s, i, r, k, false);
                     double m2 = M(1, r, k, r, j+1, false);
-                    if (bp(s,i,r,k) && val == dpt.sum(dpt.sum(dpt.E(), m1),m2)){
+                    if (bp(s,i,r,k) && dpt.btChoose(dpt.sum(dpt.sum(dpt.E(), m1),m2))){
                         mfeStructure.setBasePair(left, i, right, k);
                         return     backtrackHelper(m, s, i, r, k, false, left, right, m1)
                                 && backtrackHelper(1, r, k, r, j+1, false, right, right, m2);
@@ -206,7 +217,7 @@ public class DP {
                     for (int k = 0; k < sp.getStrandLength(t); k++){
                         double m1 = M(mm, s, i, t, k, false);
                         double m2 = M(m-mm+1, t, k, r, j+1, c);
-                        if (bp(s,i,t,k) && val == dpt.sum(dpt.sum(dpt.E(),m1), m2)){
+                        if (bp(s,i,t,k) && dpt.btChoose(dpt.sum(dpt.sum(dpt.E(),m1), m2))){
                             mfeStructure.setBasePair(left, i, left+mm-1, k);
                             mfeStructure.setStrandRank(t, left + mm - 1);
                             return     backtrackHelper(mm, s, i, t, k, false, left, left + mm - 1, m1)
@@ -214,53 +225,58 @@ public class DP {
                     }}
                 }
         }
-        System.out.println("Cannot find the follow-up DP decision");
-        return false;
+        throw new RuntimeException("Inconsistent Backtracking - needs bug fixing!");
     }
     private boolean backtrackHelper(int m, int s, int i, int r, int j, boolean c, int left, int right, double val){
+        dpt.btInit(val);
         if (m == 1){
             if (j - i < 3) return true; // empty region
-            if (j > 0 && i+1 < sp.getStrandLength(s) && sp.getM(1, s, i+1, s, j-1, false) == val){
-            return recBacktrack(s, i+1, s, j-1, false, left, right, val);
+            if (j > 0 && i+1 < sp.getStrandLength(s)){
+                double v = sp.getM(1, s, i+1, s, j-1, false);
+                if (dpt.btChoose(v)){
+                    return recBacktrack(s, i+1, s, j-1, false, left, right, v);
+                }
         }
         }
         else if (j > 0){
             if (i+1 < sp.getStrandLength(s)){
-                if (sp.getM(m, s, i+1, r, j-1, c) == val){
-                    return recBacktrack(s, i+1, r, j-1, c, left, right, val);
+                double v = sp.getM(m, s, i+1, r, j-1, c);
+                if (dpt.btChoose(v)){
+                    return recBacktrack(s, i+1, r, j-1, c, left, right, v);
                 }
             }
             else if (m == 2){
-                if (sp.getM(1, r, 0, r, j-1, false) == val){
-                    return recBacktrack(r, 0, r, j-1, false, right, right, sp.getM(1, r, 0, r, j-1, false));
+                double v = sp.getM(1, r, 0, r, j-1, false);
+                if (dpt.btChoose(v)){
+                    return recBacktrack(r, 0, r, j-1, false, right, right, v);
                 }
             }
             else for (int t = 0; t < sp.getNumStrands(); t++){
-                double m1 = sp.getM(m-1, t, 0, r, j-1, conn);
-                if (m1 == val){
+                double v = sp.getM(m-1, t, 0, r, j-1, conn);
+                if (dpt.btChoose(v)){
                         mfeStructure.setStrandRank(t, left+1);
-                        return recBacktrack(t, 0, r, j-1, conn,left+1, right, m1);
+                        return recBacktrack(t, 0, r, j-1, conn,left+1, right, v);
                     }
                 }
         }
         else{
             if (i+1 < sp.getStrandLength(s)){
                 if (m==2) {
-                    if (sp.getM(1, s, i + 1, s, sp.getStrandLength(s) - 1, false) == val) {
-                        return recBacktrack(s, i + 1, s, sp.getStrandLength(s) - 1, false, left, left, sp.getM(1, s, i + 1, s, sp.getStrandLength(s) - 1, false));
+                    double v = sp.getM(1, s, i + 1, s, sp.getStrandLength(s) - 1, false);
+                    if (dpt.btChoose(v)) {
+                        return recBacktrack(s, i + 1, s, sp.getStrandLength(s) - 1, false, left, left, v);
                     }
                 }
                 else for (int u = 0; u < sp.getNumStrands(); u++){
-                    double m1 = sp.getM(m-1, s, i, u, sp.getStrandLength(u)-1, conn);
-                    if (m1 == val){
+                    double v = sp.getM(m-1, s, i, u, sp.getStrandLength(u)-1, conn);
+                    if (dpt.btChoose(v)){
                         mfeStructure.setStrandRank(u, right-1);
-                        return recBacktrack(s, i, u, sp.getStrandLength(u)-1, conn, left, right-1, m1);
+                        return recBacktrack(s, i, u, sp.getStrandLength(u)-1, conn, left, right-1, v);
                     }
                 }
             }
-            return m <= 2; //empty region
+            if (m <= 2) return true; //empty region
         }
-        //System.out.printf("!!!!!!! -- %s %s %s %s -- ", left, i, right, j);
-        return false;
+        throw new RuntimeException("Inconsistent Backtracking - needs bug fixing!!");
     }
 }

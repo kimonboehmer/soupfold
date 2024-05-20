@@ -1,4 +1,5 @@
 public class MFE implements DPType{
+    double targetVal;
     @Override
     public double noEffect(){
         return 0;
@@ -20,4 +21,16 @@ public class MFE implements DPType{
     public double E(){
         return -1;
     }
+
+    @Override
+    public boolean btChoose(double a) {
+        return a == targetVal;
+    }
+
+    @Override
+    public void btInit(double a) {
+        targetVal = a;
+    }
+
+
 }
