@@ -42,7 +42,7 @@ public class PartitionFunction implements DPType{
 
     @Override
     public double strandPenalty(int length) {
-        return 0;//-length * 10000;
+        return Math.pow(0.34, length) ;//-length * 10000;
     }
 
 }
