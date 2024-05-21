@@ -6,8 +6,8 @@ public class PartitionFunction implements DPType{
     double bpContrib;
     final double BOLTZMANN_CONSTANT = 0.001987;
     public PartitionFunction(double temperature){
-        this.bpContrib = Math.exp(- 1.0 / (temperature * BOLTZMANN_CONSTANT));
-        r = new Random(30);
+        this.bpContrib = Math.exp(1.0 / (temperature * BOLTZMANN_CONSTANT));
+        r = new Random();
     }
     public double noEffect(){
         return INFTY;
@@ -42,7 +42,7 @@ public class PartitionFunction implements DPType{
 
     @Override
     public double strandPenalty(int length) {
-        return 0;
+        return 0;//-length * 10000;
     }
 
 }
