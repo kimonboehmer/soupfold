@@ -41,6 +41,29 @@ public class SecondaryStructure {
     public void setStrandRank(int s, int i){
         permutation[i] = s;
     }
+
+    /**
+     * @param s given strand
+     * @param i given index
+     * @return strand paired to s_i, or -1 if unpaired
+     */
+    public int getPairedStrand(int s, int i){
+        Position p = partner[s][i];
+        return p == null ? -1 : p.strand;
+    }
+
+    /**
+     * @param s given strand
+     * @param i given index
+     * @return index (position) paired to s_i, or -1 if unpaired
+     */
+    public int getPairedIndex(int s, int i){
+        Position p = partner[s][i];
+        return p == null ? -1 : p.pos;
+    }
+    public int getStrandFromPosition(int i){
+        return permutation[i];
+    }
     public String toString(){
         StringBuilder sb = new StringBuilder(sp.toString(permutation[0]));
         for (int i = 1; i < permutation.length; i++) {

@@ -2,7 +2,12 @@ import java.util.LinkedList;
 
 public class Main {
     public static void main(String[] args) {
-        testHeterodimer2();
+        bpProbas();
+    }
+    public static void bpProbas(){
+        StrandPool sp = new TripletPool(new Base[]{Base.C, Base.A, Base.G}, 27, 1);
+        double[][][][] probas = Experiments.basePairProbabilities(sp, 3, 10000);
+        int as = 1;
     }
     public static void testMFE(){
         StrandPool sp = new TripletPool(new Base[]{Base.C, Base.A, Base.G}, 27, 1);
