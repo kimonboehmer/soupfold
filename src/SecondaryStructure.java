@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.util.Arrays;
 
 public class SecondaryStructure {
-    private class Position{
+    private static class Position{
         int strand;
         int pos;
         protected Position(int strand, int pos){
@@ -12,7 +12,6 @@ public class SecondaryStructure {
             this.pos = pos;
         }
     }
-    private int numBps;
 
     StrandPool sp;
     private final Position[][] partner; // -1 if unpaired
@@ -24,7 +23,6 @@ public class SecondaryStructure {
         partner = new Position[m][maxStrandLength];
         for (Position[] ints : partner) Arrays.fill(ints, null);
         permutation = new int[m];
-        numBps = 0;
     }
 
     /**
@@ -34,17 +32,11 @@ public class SecondaryStructure {
      * @param j the position of the base on the right strand
      */
     public void setBasePair(int s, int i, int r, int j){
-        /*System.out.println("----");
-        System.out.println(s);
-        System.out.println(i);
-        System.out.println(r);
-        System.out.println(j);*/
         if (partner[s][i] != null || partner[r][j] != null) {
             throw new RuntimeException("Position already paired!");
         }
         partner[s][i] = new Position(r, j);
         partner[r][j] = new Position(s, i);
-        numBps++;
     }
     public void setStrandRank(int s, int i){
         permutation[i] = s;

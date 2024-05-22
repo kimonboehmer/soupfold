@@ -9,8 +9,8 @@ public class PartitionFunction implements DPType{
         this.bpContrib = Math.exp(1.0 / (temperature * BOLTZMANN_CONSTANT));
         r = new Random();
     }
-    public double noEffect(){
-        return INFTY;
+    public double forbidden(){
+        return 0;
     }
     public double initValue() {
         return 1.0;

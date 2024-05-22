@@ -3,15 +3,15 @@ public class DP {
     public static final int NOT_SET = 100000;
     double mfeValue;
     DPType dpt;
-    private int startM;
+    private final int startM;
     int theta;
     private final boolean conn;
     SecondaryStructure mfeStructure;
-    public DP(StrandPool sp, int theta, boolean conn, DPType dpt){
+    public DP(StrandPool sp, int m, int theta, boolean conn, DPType dpt){
         this.sp = sp;
         this.theta = theta;
         mfeValue = NOT_SET;
-        startM = 0;
+        startM = m;
         this.conn = conn;
         this.dpt = dpt;
     }
@@ -32,7 +32,7 @@ public class DP {
         return res;
     }
     private double M(int m, int s, int i, int r, int j, boolean c){
-        if (m==0) return dpt.noEffect();
+        if (m==0) return dpt.initValue();
         if (m==1) {
             if (i+1 < sp.getStrandLength(s) && j > 0 && j > i+1) return getOrComputeM(1, s, i+1, s, j-1, false);
             return dpt.initValue();
@@ -46,14 +46,14 @@ public class DP {
             if (m==2) return getOrComputeM(1, s, i+1, s, sp.getStrandLength(s)-1, false);
             return minOverSecStrands(m-1, s, i+1);
         }
-        if (conn) return 0;
+        if (conn) return dpt.forbidden();
         else throw new RuntimeException("Not yet implemented");
     }
     private boolean bp(int s, int i, int r, int j){
         return (Base.pair(sp.getBase(s, i), sp.getBase(r, j)));
     }
     private double computeMultiloop(int m, int s, int i, int r, int j, boolean c){
-        double mfe = 0;
+        double mfe = dpt.forbidden();
         for (int mm = 1; mm <= m; mm++){
             if (mm == 1){
                 int lim = sp.getStrandLength(s) - 1;
@@ -107,17 +107,16 @@ public class DP {
         }
         return val;
     }
-    public double computeMFE(int m){
-        startM = m;
-        sp.initializeTable(m, theta, dpt.initValue());
-        double mfe = 0;
+    public double computeMFE(){
+        sp.initializeTable(startM, theta, dpt.initValue());
+        double mfe = dpt.forbidden();
         for (int s = 0; s < sp.getNumStrands(); s++) {
-            if (m == 1){
-                double val = dpt.sum(getOrComputeM(m, s, 0, s, sp.getStrandLength(s) - 1, false), dpt.strandPenalty(sp.getStrandLength(s)));
+            if (startM == 1){
+                double val = dpt.sum(getOrComputeM(startM, s, 0, s, sp.getStrandLength(s) - 1, false), dpt.strandPenalty(sp.getStrandLength(s)));
                 mfe = dpt.min(mfe, val);
             }
             else for (int r = 0; r < sp.getNumStrands(); r++) {
-                double val = dpt.sum(dpt.sum(getOrComputeM(m, s, 0, r, sp.getStrandLength(r) - 1, conn), dpt.strandPenalty(sp.getStrandLength(s))), dpt.strandPenalty(sp.getStrandLength(r)));
+                double val = dpt.sum(dpt.sum(getOrComputeM(startM, s, 0, r, sp.getStrandLength(r) - 1, conn), dpt.strandPenalty(sp.getStrandLength(s))), dpt.strandPenalty(sp.getStrandLength(r)));
                 mfe = dpt.min(mfe, val);
             }
         }
@@ -154,9 +153,6 @@ public class DP {
         return mfeStructure;
     }
     private boolean recBacktrack(int s, int i, int r, int j, boolean c, int left, int right, double val) {
-        /*System.out.println("-------------");
-        System.out.printf("New Backtrack with: %s, %s, %s, %s", left, i, right, j);
-        System.out.println("-------------");*/
         dpt.btInit(val);
         if (val == 0) return true;
         if (left == right && j - i <= theta) return true;

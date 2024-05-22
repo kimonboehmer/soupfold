@@ -1,8 +1,8 @@
 public class MFE implements DPType{
     double targetVal;
     @Override
-    public double noEffect(){
-        return 0;
+    public double forbidden(){
+        return INFTY;
     }
     @Override
     public double initValue(){

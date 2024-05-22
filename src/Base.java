@@ -1,3 +1,5 @@
+import java.util.InputMismatchException;
+
 public enum Base {
     A,C,G,U;
     private static final boolean[][] BASEPAIRS = new boolean[][]{
@@ -11,5 +13,14 @@ public enum Base {
     }
     public char toChar(){
         return CHARS[this.ordinal()];
+    }
+    public static Base toBase(char c){
+        return switch (c) {
+            case 'A' -> Base.A;
+            case 'C' -> Base.C;
+            case 'G' -> Base.G;
+            case 'U' -> Base.U;
+            default -> throw new InputMismatchException("Invalid strand");
+        };
     }
 }

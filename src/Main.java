@@ -6,14 +6,14 @@ public class Main {
     }
     public static void testMFE(){
         StrandPool sp = new TripletPool(new Base[]{Base.C, Base.A, Base.G}, 27, 1);
-        DP dp = new DP(sp, 3, true, new MFE());
-        System.out.println((int) dp.computeMFE(3));
+        DP dp = new DP(sp, 3, 3, true, new MFE());
+        System.out.println((int) dp.computeMFE());
         System.out.println(dp.backtrack());
     }
     public static void testPartitionFunction(){
         StrandPool sp = new TripletPool(new Base[]{Base.C, Base.A, Base.G}, 15, 1);
-        DP dp = new DP(sp, 3, true, new PartitionFunction(300));
-        System.out.println((int) dp.computeMFE(3));
+        DP dp = new DP(sp, 3, 3, true, new PartitionFunction(300));
+        System.out.println((int) dp.computeMFE());
         System.out.println(dp.backtrack());
         System.out.println(dp.dpt.E());
     }
@@ -26,8 +26,8 @@ public class Main {
         ll.add(new Base[]{Base.G, Base.C, Base.C});
         for (Base[] b : ll){
             StrandPool sp = new TripletPool(b, 27, 1);
-            DP dp = new DP(sp, 3, true, new MFE());
-            results.add((int) dp.computeMFE(5));
+            DP dp = new DP(sp, 5, 3, true, new MFE());
+            results.add((int) dp.computeMFE());
         }
         System.out.println(results);
     }
@@ -37,8 +37,8 @@ public class Main {
         strands.add("GUU9");
         strands.add("ACG12");
         StrandPool sp = new TripletPool(strands);
-        DP dp2 = new DP(sp, 3, true, new PartitionFunction(300));
-        System.out.println(dp2.computeMFE(3));
+        DP dp2 = new DP(sp, 3, 3, true, new PartitionFunction(300));
+        System.out.println(dp2.computeMFE());
         SecondaryStructure st = dp2.backtrack();
         System.out.println(st.toString());
     }
@@ -50,8 +50,8 @@ public class Main {
         strands.add("GUU15");
         strands.add("ACG12");
         StrandPool sp = new TripletPool(strands);
-        DP dp2 = new DP(sp, 3, true, new PartitionFunction(300));
-        System.out.println(dp2.computeMFE(3));
+        DP dp2 = new DP(sp, 3, 3, true, new PartitionFunction(300));
+        System.out.println(dp2.computeMFE());
         for (int i = 0; i < 10; i++) System.out.println(dp2.backtrack());
     }
 }
