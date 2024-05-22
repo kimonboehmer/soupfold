@@ -2,12 +2,15 @@ import java.util.LinkedList;
 
 public class Main {
     public static void main(String[] args) {
-        bpProbas();
+        testPartitionFunction();
     }
     public static void bpProbas(){
         StrandPool sp = new TripletPool(new Base[]{Base.C, Base.A, Base.G}, 27, 1);
-        double[][][][] probas = Experiments.basePairProbabilities(sp, 3, 10000);
-        int as = 1;
+        for (int m = 1; m < 10; m++) System.out.println(Experiments.interactionProbability(sp, m, 100000));
+    }
+    public static void bpTypes(){
+        StrandPool sp = new TripletPool(new Base[]{Base.C, Base.A, Base.G}, 27, 1);
+        Experiments.bpTypes(sp, 3, 100000);
     }
     public static void testMFE(){
         StrandPool sp = new TripletPool(new Base[]{Base.C, Base.A, Base.G}, 27, 1);
@@ -16,7 +19,7 @@ public class Main {
         System.out.println(dp.backtrack());
     }
     public static void testPartitionFunction(){
-        StrandPool sp = new TripletPool(new Base[]{Base.C, Base.A, Base.G}, 15, 1);
+        StrandPool sp = new TripletPool(new Base[]{Base.C, Base.A, Base.G}, 27, 1);
         DP dp = new DP(sp, 3, 3, true, new PartitionFunction(300));
         System.out.println((int) dp.computeMFE());
         System.out.println(dp.backtrack());
