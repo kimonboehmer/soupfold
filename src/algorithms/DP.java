@@ -1,3 +1,10 @@
+package algorithms;
+
+import algorithms.DPType;
+import datastructures.Base;
+import datastructures.SecondaryStructure;
+import datastructures.StrandPool;
+
 public class DP {
     private final StrandPool sp;
     public static final int NOT_SET = 100000;
@@ -125,7 +132,7 @@ public class DP {
     }
 
     /**
-     * assumes that the DP table is already filled (i.e. computeMFE already executed)!
+     * assumes that the algorithms.DP table is already filled (i.e. computeMFE already executed)!
      * @return one optimal secondary structure
      */
     public SecondaryStructure backtrack(){

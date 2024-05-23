@@ -1,3 +1,9 @@
+package datastructures;
+
+import algorithms.DP;
+import datastructures.Base;
+import datastructures.StrandPool;
+
 import java.util.*;
 
 public class TripletPool implements StrandPool {
@@ -63,8 +69,8 @@ public class TripletPool implements StrandPool {
         M = new double[m+1][numPatterns][maxRepeats * REPEAT_LENGTH][numPatterns][maxRepeats * 3][2];
         for(int si=0;si<numPatterns;si++)for(int ii=0;ii<maxRepeats * REPEAT_LENGTH;ii++)for(int ri=0;ri<numPatterns;ri++)for(int ji=0;ji<maxRepeats * REPEAT_LENGTH;ji++){
             for (int mi = 1; mi < m+1;mi++){
-                M[mi][si][ii][ri][ji][0]=DP.NOT_SET;
-                M[mi][si][ii][ri][ji][1]=DP.NOT_SET;
+                M[mi][si][ii][ri][ji][0]= DP.NOT_SET;
+                M[mi][si][ii][ri][ji][1]= DP.NOT_SET;
             }
             M[0][si][ii][ri][ji][0] = initValue;
         }

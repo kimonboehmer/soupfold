@@ -1,6 +1,10 @@
+package algorithms;
+
+import algorithms.DPType;
+
 import java.util.Random;
 
-public class PartitionFunction implements DPType{
+public class PartitionFunction implements DPType {
     private double randomVal;
     private final Random r;
     double bpContrib;
@@ -42,7 +46,7 @@ public class PartitionFunction implements DPType{
 
     @Override
     public double strandPenalty(int length) {
-        return 1; //Math.pow(0.34, length) ;
+        return /*1;*/ Math.pow(1, length) ;
     }
 
 }

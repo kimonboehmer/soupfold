@@ -1,3 +1,5 @@
+package algorithms;
+
 public interface DPType {
     double min(double a, double b);
     double sum(double a, double b);

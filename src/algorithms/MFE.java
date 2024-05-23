@@ -1,4 +1,8 @@
-public class MFE implements DPType{
+package algorithms;
+
+import algorithms.DPType;
+
+public class MFE implements DPType {
     double targetVal;
     @Override
     public double forbidden(){

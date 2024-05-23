@@ -1,3 +1,9 @@
+package experiments;
+
+import algorithms.DP;
+import algorithms.PartitionFunction;
+import datastructures.SecondaryStructure;
+import datastructures.StrandPool;
 
 public class Experiments {
     public static double[][][][] basePairProbabilities(StrandPool sp, int m, int sampleSize){
@@ -74,5 +80,19 @@ public class Experiments {
             }
         }
         return 1 - (sum / (double) norm);
+    }
+    public static double[] expNumOccurencesOfStrands(StrandPool sp, int m, int sampleSize){
+        double[] data = new double[sp.getNumStrands()];
+        DP dp = new DP(sp, m, 3, true, new PartitionFunction(300));
+        dp.computeMFE();
+        for (int l = 0; l < sampleSize; l++) {
+            SecondaryStructure st = dp.backtrack();
+            for (int i = 0; i < m; i++) data[st.getStrandFromPosition(i)]++;
+        }
+        for (int i = 0; i < sp.getNumStrands(); i++){
+            data[i] /= sampleSize;
+            System.out.println(data[i]);
+        }
+        return data;
     }
 }

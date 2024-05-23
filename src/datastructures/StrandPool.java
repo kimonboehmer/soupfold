@@ -1,3 +1,4 @@
+package datastructures;
 public interface StrandPool {
 int getNumStrands();
 double getM(int m, int s, int i, int r, int j, boolean c);

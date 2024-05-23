@@ -1,8 +1,17 @@
+import algorithms.DP;
+import algorithms.MFE;
+import algorithms.PartitionFunction;
+import datastructures.Base;
+import datastructures.SecondaryStructure;
+import datastructures.StrandPool;
+import datastructures.TripletPool;
+import experiments.Experiments;
+
 import java.util.LinkedList;
 
 public class Main {
     public static void main(String[] args) {
-        testPartitionFunction();
+        bpTypes();
     }
     public static void bpProbas(){
         StrandPool sp = new TripletPool(new Base[]{Base.C, Base.A, Base.G}, 27, 1);
@@ -10,7 +19,7 @@ public class Main {
     }
     public static void bpTypes(){
         StrandPool sp = new TripletPool(new Base[]{Base.C, Base.A, Base.G}, 27, 1);
-        Experiments.bpTypes(sp, 3, 100000);
+        Experiments.expNumOccurencesOfStrands(sp, 3, 10000);
     }
     public static void testMFE(){
         StrandPool sp = new TripletPool(new Base[]{Base.C, Base.A, Base.G}, 27, 1);
@@ -23,7 +32,6 @@ public class Main {
         DP dp = new DP(sp, 3, 3, true, new PartitionFunction(300));
         System.out.println((int) dp.computeMFE());
         System.out.println(dp.backtrack());
-        System.out.println(dp.dpt.E());
     }
     public static void testDifferentTriplets(){
         LinkedList<Integer> results = new LinkedList<>();

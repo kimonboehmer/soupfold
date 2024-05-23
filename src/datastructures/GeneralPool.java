@@ -1,3 +1,6 @@
+package datastructures;
+
+import datastructures.Base;
 
 public class GeneralPool {
     Base[][] pool;
