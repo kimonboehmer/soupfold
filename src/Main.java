@@ -11,7 +11,7 @@ import java.util.LinkedList;
 
 public class Main {
     public static void main(String[] args) {
-        bpTypes();
+        System.out.println(connectivity());
     }
     public static void bpProbas(){
         StrandPool sp = new TripletPool(new Base[]{Base.C, Base.A, Base.G}, 27, 1);
@@ -20,6 +20,13 @@ public class Main {
     public static void bpTypes(){
         StrandPool sp = new TripletPool(new Base[]{Base.C, Base.A, Base.G}, 27, 1);
         Experiments.expNumOccurencesOfStrands(sp, 3, 10000);
+    }
+    public static double connectivity(){
+        StrandPool sp = new TripletPool(new Base[]{Base.C, Base.A, Base.G}, 15, 1);
+        Experiments.connectivityExperiment(sp, 3, 200);
+        for (int m = 1; m < 20; m++)
+            System.out.printf("Not-connectedness probability with m=%d: %f\n", m, Experiments.connectivityExperiment(sp, m, 10000).getFirst());
+        return 0;
     }
     public static void testMFE(){
         StrandPool sp = new TripletPool(new Base[]{Base.C, Base.A, Base.G}, 27, 1);

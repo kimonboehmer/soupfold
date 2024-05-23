@@ -65,6 +65,8 @@ public class SecondaryStructure {
     public int getStrandFromPosition(int i){
         return permutation[i];
     }
+    public int getM(){ return permutation.length; }
+    public StrandPool getStrandPool(){ return sp; }
     public String toString(){
         StringBuilder sb = new StringBuilder(sp.toString(permutation[0]));
         for (int i = 1; i < permutation.length; i++) {

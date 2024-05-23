@@ -5,7 +5,61 @@ import algorithms.PartitionFunction;
 import datastructures.SecondaryStructure;
 import datastructures.StrandPool;
 
+import java.util.LinkedList;
+import java.util.Queue;
+import java.util.Random;
+
 public class Experiments {
+    public static SecondaryStructure sampleAndReject(DP dp){
+        Random r = new Random();
+        SecondaryStructure s;
+        LinkedList<Integer>[] connComps;
+        double threshold;
+        do{
+            s = dp.backtrack();
+            connComps = connectedComponents(s);
+            threshold = 1.0 / (double) computeOvercountingFactor(connComps);
+        }
+        while (/*connComps.length > 1 && */r.nextDouble() > threshold);
+        return s;
+    }
+    private static LinkedList<Integer>[] connectedComponents(SecondaryStructure st){
+        LinkedList<LinkedList<Integer>> connComps = new LinkedList<>();
+        int m = st.getM();
+        boolean[] visited = new boolean[m];
+        for (int s = 0; s < m; s++) if (!visited[s]){
+            LinkedList<Integer> connComp = new LinkedList<>();
+            Queue<Integer> q = new LinkedList<>();
+            q.offer(s);
+            visited[s] = true;
+            while (!q.isEmpty()){
+                int r = q.poll();
+                connComp.add(r);
+                for (int i = 0; i < st.getStrandPool().getStrandLength(st.getStrandFromPosition(r)); i++){
+                    int p = st.getPairedStrand(r, i);
+                    if (p >= 0 && !visited[p]){
+                        q.offer(p);
+                        visited[p] = true;
+                    }
+                }
+            }
+            connComps.add(connComp);
+        }
+        LinkedList<Integer>[] arr = new LinkedList[connComps.size()];
+        int i = 0;
+        for (LinkedList<Integer> connComp : connComps) arr[i++] = connComp;
+        return arr;
+    }
+    private static int computeOvercountingFactor(LinkedList<Integer>[] connComps){
+        int prod = 1;
+        for (int i = 0; i < connComps.length; i++){
+            int sum = 0;
+            for (int j = 0; j < i; j++) sum += connComps[j].size();
+            if (sum == 0) sum = 1;
+            prod *= sum * connComps[i].size();
+        }
+        return prod;
+    }
     public static double[][][][] basePairProbabilities(StrandPool sp, int m, int sampleSize){
         DP dp = new DP(sp, m, 3, true, new PartitionFunction(300));
         dp.computeMFE();
@@ -83,7 +137,7 @@ public class Experiments {
     }
     public static double[] expNumOccurencesOfStrands(StrandPool sp, int m, int sampleSize){
         double[] data = new double[sp.getNumStrands()];
-        DP dp = new DP(sp, m, 3, true, new PartitionFunction(300));
+        DP dp = new DP(sp, m, 3, false, new PartitionFunction(300));
         dp.computeMFE();
         for (int l = 0; l < sampleSize; l++) {
             SecondaryStructure st = dp.backtrack();
@@ -94,5 +148,19 @@ public class Experiments {
             System.out.println(data[i]);
         }
         return data;
+    }
+    public static LinkedList<Double> connectivityExperiment(StrandPool sp, int m, int sampleSize){
+        int count = 0;
+        DP dp  = new DP(sp, m, 3, false, new PartitionFunction(1000));
+        dp.computeMFE();
+        for (int l = 0; l < sampleSize; l++){
+            SecondaryStructure s = sampleAndReject(dp);
+            if (connectedComponents(s).length > 1){
+                count++;
+            }
+        }
+        LinkedList<Double> ll = new LinkedList<>();
+        ll.add(count / (double) sampleSize);
+        return ll;
     }
 }
