@@ -1,6 +1,4 @@
 package algorithms;
-
-import algorithms.DPType;
 import datastructures.Base;
 import datastructures.SecondaryStructure;
 import datastructures.StrandPool;
@@ -8,12 +6,12 @@ import datastructures.StrandPool;
 public class DP {
     private final StrandPool sp;
     public static final int NOT_SET = 100000;
-    double mfeValue;
-    DPType dpt;
+    private double mfeValue;
+    private final DPType dpt;
     private final int startM;
-    int theta;
+    private final int theta;
     private final boolean conn;
-    SecondaryStructure mfeStructure;
+    private SecondaryStructure mfeStructure;
     public DP(StrandPool sp, int m, int theta, boolean conn, DPType dpt){
         this.sp = sp;
         this.theta = theta;
@@ -21,6 +19,7 @@ public class DP {
         startM = m;
         this.conn = conn;
         this.dpt = dpt;
+        mfeValue = computeMFE();
     }
     private double minOverStrands(int m, int r, int j){
         double res = dpt.forbidden();
@@ -57,25 +56,23 @@ public class DP {
             if (m==2) return getOrComputeM(1, s, i+1, s, sp.getStrandLength(s)-1, false);
             return minOverSecStrands(m-1, s, i+1);
         }
+        if (m == 2) return dpt.initValue();
         if (conn) return dpt.forbidden();
         else{
-            if (m == 2) return dpt.initValue();
-            else if (m == 3){
-                double res = dpt.forbidden();
+            double res = dpt.forbidden();
+            if (m == 3){
                 for (int t = 0; t < sp.getNumStrands();t++){
-                    double val = dpt.sum(getOrComputeM(1, t, 0, t, sp.getStrandLength(t)-1, conn), dpt.strandPenalty(sp.getStrandLength(t)));
+                    double val = dpt.sum(getOrComputeM(1, t, 0, t, sp.getStrandLength(t)-1, false), dpt.strandPenalty(sp.getStrandLength(t)));
                     res = dpt.min(res, val);
                 }
-                return res;
             }
             else{
-                double res = dpt.forbidden();
                 for (int t = 0; t < sp.getNumStrands(); t++) for (int u = 0; u < sp.getNumStrands(); u++){
-                    double val = dpt.sum(dpt.sum(getOrComputeM(m-2, t, 0, u, sp.getStrandLength(u) - 1, conn), dpt.strandPenalty(sp.getStrandLength(t))), dpt.strandPenalty(sp.getStrandLength(u)));
+                    double val = dpt.sum(dpt.sum(getOrComputeM(m-2, t, 0, u, sp.getStrandLength(u) - 1, false), dpt.strandPenalty(sp.getStrandLength(t))), dpt.strandPenalty(sp.getStrandLength(u)));
                     res = dpt.min(res, val);
                 }
-                return res;
             }
+            return res;
         }
     }
     private boolean bp(int s, int i, int r, int j){
@@ -139,7 +136,7 @@ public class DP {
         }
         return val;
     }
-    public double computeMFE(){
+    private double computeMFE(){
         sp.initializeTable(startM, theta, dpt.initValue());
         double mfe = dpt.forbidden();
         for (int s = 0; s < sp.getNumStrands(); s++) {
@@ -157,8 +154,8 @@ public class DP {
     }
 
     /**
-     * assumes that the algorithms.DP table is already filled (i.e. computeMFE already executed)!
-     * @return one optimal secondary structure
+     * @return one optimal secondary structure if dpt is of type MFE, and
+     *         one sampled secondary structure if dpt is of type PartitionFunction.
      */
     public SecondaryStructure backtrack(){
         mfeStructure = new SecondaryStructure(sp, startM);
@@ -251,8 +248,9 @@ public class DP {
     }
     private boolean backtrackHelper(int m, int s, int i, int r, int j, boolean c, int left, int right, double val){
         dpt.btInit(val);
+        if (m == 0) return true;
         if (m == 1){
-            if (j - i < 3) return true; // empty region
+            if (j - i < theta) return true; // empty region
             if (j > 0 && i+1 < sp.getStrandLength(s)){
                 double v = sp.getM(1, s, i+1, s, j-1, false);
                 if (dpt.btChoose(v)){
@@ -298,6 +296,7 @@ public class DP {
                 }
             }
             if (m <= 2) return true; //empty region
+            if (conn) throw new RuntimeException("hm");
             if (m == 3){
                 for (int t = 0; t < sp.getNumStrands(); t++){
                     double v = sp.getM(1, t, 0, t, sp.getStrandLength(t)-1, conn);
@@ -317,5 +316,8 @@ public class DP {
             }
         }
         throw new RuntimeException("Inconsistent Backtracking - needs bug fixing!!");
+    }
+    public double getMFE(){
+        return mfeValue;
     }
 }

@@ -17,6 +17,7 @@ public class SecondaryStructure {
     StrandPool sp;
     private final Position[][] partner; // -1 if unpaired
     private final int[] permutation;
+    private int numBPs;
     public SecondaryStructure(StrandPool sp, int m){
         this.sp = sp;
         int maxStrandLength = 0;
@@ -24,6 +25,7 @@ public class SecondaryStructure {
         partner = new Position[m][maxStrandLength];
         for (Position[] ints : partner) Arrays.fill(ints, null);
         permutation = new int[m];
+        numBPs = 0;
     }
 
     /**
@@ -38,6 +40,7 @@ public class SecondaryStructure {
         }
         partner[s][i] = new Position(r, j);
         partner[r][j] = new Position(s, i);
+        numBPs++;
     }
     public void setStrandRank(int s, int i){
         permutation[i] = s;
@@ -105,5 +108,9 @@ public class SecondaryStructure {
             System.out.println("An error occurred.");
             e.printStackTrace();
         }
+    }
+
+    public int getNumBPs() {
+        return numBPs;
     }
 }

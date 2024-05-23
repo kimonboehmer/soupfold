@@ -4,12 +4,13 @@ import algorithms.DP;
 import algorithms.PartitionFunction;
 import datastructures.SecondaryStructure;
 import datastructures.StrandPool;
+import datastructures.TripletPool;
 
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Random;
 
-public class Experiments {
+public class Sampling {
     public static SecondaryStructure sampleAndReject(DP dp){
         Random r = new Random();
         SecondaryStructure s;
@@ -62,7 +63,6 @@ public class Experiments {
     }
     public static double[][][][] basePairProbabilities(StrandPool sp, int m, int sampleSize){
         DP dp = new DP(sp, m, 3, true, new PartitionFunction(300));
-        dp.computeMFE();
         int maxStrandLength = 0;
         for (int i = 0; i < sp.getNumStrands(); i++) maxStrandLength = Math.max(maxStrandLength, sp.getStrandLength(i));
         double[][][][] table = new double[sp.getNumStrands()][maxStrandLength][sp.getNumStrands()][maxStrandLength];
@@ -99,7 +99,6 @@ public class Experiments {
     }
     public static double[][][][] basePairProbabilitiesByPosition(StrandPool sp, int m, int sampleSize){
         DP dp = new DP(sp, m, 3, true, new PartitionFunction(300));
-        dp.computeMFE();
         int maxStrandLength = 0;
         for (int i = 0; i < sp.getNumStrands(); i++) maxStrandLength = Math.max(maxStrandLength, sp.getStrandLength(i));
         double[][][][] table = new double[m][maxStrandLength][m][maxStrandLength];
@@ -119,11 +118,13 @@ public class Experiments {
     }
     public static double interactionProbability(StrandPool sp, int m, int sampleSize){
         double sum = 0;
+        double homoSum = 0;
         int norm = 0;
         double[][][][] table = basePairProbabilitiesByPosition(sp, m, sampleSize);
         for (int s = 0; s < m; s++) for (int i = 0; i < table[s].length; i++){
             double countAll = 0;
             double countInteriorBPs = 0;
+            double countHomoBPs = 0;
             for (int r = 0; r < m; r++) for (int j = 0; j < table[s][i][r].length; j++){
                 countAll += table[s][i][r][j];
             }
@@ -138,7 +139,6 @@ public class Experiments {
     public static double[] expNumOccurencesOfStrands(StrandPool sp, int m, int sampleSize){
         double[] data = new double[sp.getNumStrands()];
         DP dp = new DP(sp, m, 3, false, new PartitionFunction(300));
-        dp.computeMFE();
         for (int l = 0; l < sampleSize; l++) {
             SecondaryStructure st = dp.backtrack();
             for (int i = 0; i < m; i++) data[st.getStrandFromPosition(i)]++;
@@ -150,17 +150,51 @@ public class Experiments {
         return data;
     }
     public static LinkedList<Double> connectivityExperiment(StrandPool sp, int m, int sampleSize){
-        int count = 0;
+        int[] ccSize = new int[m+1];
         DP dp  = new DP(sp, m, 3, false, new PartitionFunction(1000));
-        dp.computeMFE();
         for (int l = 0; l < sampleSize; l++){
             SecondaryStructure s = sampleAndReject(dp);
-            if (connectedComponents(s).length > 1){
-                count++;
-            }
+            LinkedList<Integer>[] cc = connectedComponents(s);
+            ccSize[cc.length]++;
         }
         LinkedList<Double> ll = new LinkedList<>();
-        ll.add(count / (double) sampleSize);
+        for (int i = 0; i < ccSize.length; i++){
+            System.out.printf("num of cc = %d: %d times\n", i, ccSize[i]);
+            ll.add((double) i);
+        }
+        ll.set(0, ll.get(1) / sampleSize);
         return ll;
+    }
+    public static double avgBPs(StrandPool sp, int m, int sampleSize){
+        double sum = 0;
+        DP dp = new DP(sp, m, 3, true, new PartitionFunction(300));
+        for (int l = 0; l < sampleSize; l++){
+            SecondaryStructure s = dp.backtrack();
+            if (l == 5000) System.out.println(s.toString());
+            int len = 0;
+            for (int i = 0; i < m; i++) len += sp.getStrandLength(s.getStrandFromPosition(i));
+            sum += s.getNumBPs() / (double) len;
+        }
+        return sum / (double) sampleSize;
+    }
+    public static double[] classifyBasePairs(TripletPool sp, int m, int sampleSize){
+        int interior = 0;
+        int homoExt = 0;
+        int heteroExt = 0;
+        DP dp = new DP(sp, m, 3, true, new PartitionFunction(300));
+        for (int l = 0; l < sampleSize; l++){
+            SecondaryStructure st = dp.backtrack();
+            for (int s = 0; s < m; s++){
+                for (int i = 0; i < sp.getStrandLength(st.getStrandFromPosition(s)); i++){
+                    int r = st.getPairedStrand(s, i);
+                    if (r < 0) continue;
+                    if (s == r) interior++;
+                    else if (sp.getPattern(st.getStrandFromPosition(s)) == sp.getPattern(st.getStrandFromPosition(r))) homoExt++;
+                    else heteroExt++;
+                }
+            }
+        }
+        double sum = interior + homoExt + heteroExt;
+        return new double[]{interior / sum, homoExt / sum, heteroExt / sum};
     }
 }

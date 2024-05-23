@@ -22,6 +22,20 @@ public class TripletPool implements StrandPool {
     private final Base[][] patternArray;
     private final Triplet[] pool;
     double[][][][][][] M;
+    public TripletPool(Base[] pattern, int mid, int rad, int num){
+        pool = new Triplet[num];
+        Random rand = new Random(1);
+        minRepeats = 100000;
+        maxRepeats = 0;
+        for (int i = 0; i < num; i++){
+            int r = rand.nextInt(mid - rad, mid + rad);
+            pool[i] = new Triplet(0, r);
+            if (minRepeats > r) minRepeats = r;
+            if (maxRepeats < r) maxRepeats = r;
+        }
+        patternArray = new Base[][]{pattern};
+        numPatterns = 1;
+    }
     public TripletPool(Base[] pattern, int mid, int rad){
         assert mid > rad;
         pool = new Triplet[2 * rad + 1];
@@ -35,35 +49,41 @@ public class TripletPool implements StrandPool {
         maxRepeats = mid + rad;
         minRepeats = mid - rad;
     }
+    private int tripletIndex(LinkedList<Base[]> ll,Base[] t){
+        int i = 0;
+        for (Base[] r : ll) {
+            if (r[0] == t[0] && r[1] == t[1] && r[2] == t[2]) return i;
+            i++;
+        }
+        return -1;
+    }
     public TripletPool(List<String> strands){
         pool = new Triplet[strands.size()];
         maxRepeats = 0;
         minRepeats = 100000;
-        HashMap<Base[], Integer> hm = new HashMap<>();
-        int counter = 0;
+        LinkedList<Base[]> patternOccurences = new LinkedList<>();
         int i = 0;
+        int val = 0;
         for (String strand : strands){
             char[] strandCharArray = strand.toCharArray();
             Base[] pattern = new Base[REPEAT_LENGTH];
             for (int j = 0; j < REPEAT_LENGTH; j++){
                 pattern[j] = Base.toBase(strandCharArray[j]);
             }
-            Integer val = hm.get(pattern);
-            if (val == null){
-                hm.put(pattern, counter);
-                val = counter++;
+            if (tripletIndex(patternOccurences, pattern) == -1){
+                val++;
+                patternOccurences.add(pattern);
             }
             int reps = Integer.parseInt(strand.substring(REPEAT_LENGTH));
             if (maxRepeats < reps) maxRepeats = reps;
             if (minRepeats > reps) minRepeats = reps;
-            Triplet t = new Triplet(val, reps);
+            Triplet t = new Triplet(tripletIndex(patternOccurences, pattern), reps);
             pool[i++] = t;
         }
-        numPatterns = counter;
+        numPatterns = val;
         patternArray = new Base[numPatterns][REPEAT_LENGTH];
-        for (Map.Entry<Base[], Integer> entry : hm.entrySet()){
-            patternArray[entry.getValue()] = entry.getKey();
-        }
+        i = 0;
+        for (Base[] pattern : patternOccurences) patternArray[i++] = pattern;
     }
     public void initializeTable(int m, int theta, double initValue){
         M = new double[m+1][numPatterns][maxRepeats * REPEAT_LENGTH][numPatterns][maxRepeats * 3][2];
@@ -75,7 +95,7 @@ public class TripletPool implements StrandPool {
             M[0][si][ii][ri][ji][0] = initValue;
         }
         for (int i = 0; i < REPEAT_LENGTH; i++){
-            for (int t = 0; t <= theta; t++){
+            for (int t = 0; t <= Math.min(theta, maxRepeats * REPEAT_LENGTH - 1); t++){
                 for (int p = 0; p < numPatterns; p++){
                     M[1][p][i][p][t][0] = initValue;
                 }
@@ -102,7 +122,10 @@ public class TripletPool implements StrandPool {
     }
     public String toString(int strand){
         char[] triplet = new char[REPEAT_LENGTH * pool[strand].repeats];
-        for (int i = 0; i < triplet.length; i++) triplet[i] = patternArray[pool[strand].pattern][i % REPEAT_LENGTH].toChar();
+        for (int i = 0; i < triplet.length; i++) triplet[i] = patternArray[getPattern(strand)][i % REPEAT_LENGTH].toChar();
         return new String(triplet);
+    }
+    public int getPattern(int strand){
+        return pool[strand].pattern;
     }
 }
