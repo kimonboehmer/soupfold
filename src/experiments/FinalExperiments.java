@@ -20,12 +20,14 @@ public class FinalExperiments {
     public static Base[] bases = new Base[]{A, C, G, U};
     public static void bpTypes() throws IOException {
         double[][][][] results = new double[64][64][4][3];
-        int cV = 0;
+        int cV = -1;
         for (Base T : bases) for (Base V : bases) for (Base W : bases) {
-            int cH = 0;
+            cV++;
+            int cH = -1;
             for (Base X : bases) for (Base Y : bases) for (Base Z : bases) {
-                if (X.ordinal() < T.ordinal() || (X.ordinal() == T.ordinal() && Y.ordinal() < V.ordinal()) || (X.ordinal() == T.ordinal() && Y.ordinal() == V.ordinal() && Z.ordinal() <= W.ordinal())){
-                    cH++;
+                cH++;
+                if ((X.ordinal() < T.ordinal() || (X.ordinal() == T.ordinal() && Y.ordinal() < V.ordinal()) || (X.ordinal() == T.ordinal() && Y.ordinal() == V.ordinal() && Z.ordinal() <= W.ordinal()))){
+                    for (int m = 0; m < 4; m++) for (int t = 0; t < 3; t++) results[cV][cH][m][t] = -1;
                     continue;
                 }
                 String triplet1 = new String(new char[]{T.toChar(), V.toChar(), W.toChar()});
@@ -38,7 +40,6 @@ public class FinalExperiments {
                 if (h.size() == 1 || (h.size() == 2 && !Base.pair((Base) h.toArray()[0], (Base) h.toArray()[1]))) {
                     System.out.println("No base pairs possible");
                     for (int m = 0; m < 4; m++) for (int t = 0; t < 3; t++) results[cV][cH][m][t] = -1;
-                    cH++;
                     continue;
                 }
                 for (int m = 2; m < 6; m++) {
@@ -47,23 +48,12 @@ public class FinalExperiments {
                     System.out.printf("For m=%d, interior bps: %f, exterior homo-bps: %f, exterior hetero-bps: %f\n", m, data[0], data[1], data[2]);
                     System.arraycopy(data, 0, results[cV][cH][m - 2], 0, 3);
                 }
-                cH++;
             }
-            cV++;
         }
         for (int m = 0; m < 4; m++) for (int t = 0; t < 3; t++){
-            StringBuilder sb = new StringBuilder();
-            for(int i = 0; i < 64; i++) {
-                for(int j = 0; j < 64; j++) {
-                    sb.append(results[i][j][m][t]);
-                    if(j < 63)
-                        sb.append(";");
-                }
-                sb.append("\n");
-            }
-            BufferedWriter writer = new BufferedWriter(new FileWriter("table_m"+(m+2)+"_t"+t+".csv"));
-            writer.write(sb.toString());
-            writer.close();
+            double [][] data = new double[64][64];
+            for (int i = 0; i < 64; i++) for (int j = 0; j < 64; j++) data[i][j]=results[i][j][m][t];
+            Helper.writeCSV(data, "table_m"+(m+2)+"_t"+t+".csv");
         }
     }
     public static void bpProbas(){
@@ -75,7 +65,7 @@ public class FinalExperiments {
         Sampling.expNumOccurencesOfStrands(sp, 3, 10000);
     }
     public static double connectivity(){
-        StrandPool sp = new TripletPool(new Base[]{C, Base.A, Base.G}, 15, 1);
+        StrandPool sp = new TripletPool(new Base[]{C, Base.G, Base.G}, 5, 1);
         for (int m = 1; m < 20; m++)
             System.out.printf("Not-connectedness probability with m=%d: %f\n", m, Sampling.connectivityExperiment(sp, m, 10000).getFirst());
         return 0;

@@ -160,9 +160,9 @@ public class Sampling {
         LinkedList<Double> ll = new LinkedList<>();
         for (int i = 0; i < ccSize.length; i++){
             System.out.printf("num of cc = %d: %d times\n", i, ccSize[i]);
-            ll.add((double) i);
+            ll.add((double) ccSize[i]);
         }
-        ll.set(0, ll.get(1) / sampleSize);
+        ll.set(0, 1 - ll.get(1) / (double) sampleSize);
         return ll;
     }
     public static double avgBPs(StrandPool sp, int m, int sampleSize){

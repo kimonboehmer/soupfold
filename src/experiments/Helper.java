@@ -32,30 +32,9 @@ public class Helper {
         }
         return records.toArray(double[][]::new);
     }
-    public static double[][] changeZeros(double[][] data){
-        double[][] newData = new double[64][64];
-        int i = -1;
-        for (Base T : bases) for (Base V : bases) for (Base W : bases) {
-            i++;
-            int j = -1;
-            int diff = 0;
-            for (Base X : bases) for (Base Y : bases) for (Base Z : bases) {
-                j++;
-                HashSet<Base> h = new HashSet<>(List.of(new Base[]{T, V, W, X, Y, Z}));
-                if ( (X.ordinal() < T.ordinal() || (X.ordinal() == T.ordinal() && Y.ordinal() < V.ordinal()) || (X.ordinal() == T.ordinal() && Y.ordinal() == V.ordinal() && Z.ordinal() <= W.ordinal()))){
-                    newData[i][j] = -2;
-                    diff++;
-                }
-                else if (h.size() == 1 || (h.size() == 2 && !Base.pair((Base) h.toArray()[0], (Base) h.toArray()[1]))){
-                    newData[i][j] = -1;
-                    diff++;
-                }
-                else{
-                    newData[i][j] = data[i][j - diff];
-                }
-            }
-        }
-        return newData;
+    public static double[][] changeZeros(double[][] data, double[][] otherData){
+        for (int i = 0; i < 64; i++) data[i][i] = otherData[i][i];
+        return data;
     }
     public static void writeCSV(double[][] results, String path) throws IOException {
         StringBuilder sb = new StringBuilder(";");
