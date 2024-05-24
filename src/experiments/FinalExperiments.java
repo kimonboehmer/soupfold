@@ -24,8 +24,10 @@ public class FinalExperiments {
         for (Base T : bases) for (Base V : bases) for (Base W : bases) {
             int cH = 0;
             for (Base X : bases) for (Base Y : bases) for (Base Z : bases) {
-                if (X.ordinal() < T.ordinal() || (X.ordinal() == T.ordinal() && Y.ordinal() < V.ordinal()) || (X.ordinal() == T.ordinal() && Y.ordinal() == V.ordinal() && Z.ordinal() <= W.ordinal()))
+                if (X.ordinal() < T.ordinal() || (X.ordinal() == T.ordinal() && Y.ordinal() < V.ordinal()) || (X.ordinal() == T.ordinal() && Y.ordinal() == V.ordinal() && Z.ordinal() <= W.ordinal())){
+                    cH++;
                     continue;
+                }
                 String triplet1 = new String(new char[]{T.toChar(), V.toChar(), W.toChar()});
                 String triplet2 = new String(new char[]{X.toChar(), Y.toChar(), Z.toChar()});
                 LinkedList<String> st = new LinkedList<>();
@@ -36,6 +38,7 @@ public class FinalExperiments {
                 if (h.size() == 1 || (h.size() == 2 && !Base.pair((Base) h.toArray()[0], (Base) h.toArray()[1]))) {
                     System.out.println("No base pairs possible");
                     for (int m = 0; m < 4; m++) for (int t = 0; t < 3; t++) results[cV][cH][m][t] = -1;
+                    cH++;
                     continue;
                 }
                 for (int m = 2; m < 6; m++) {
@@ -87,6 +90,11 @@ public class FinalExperiments {
             System.out.println((int) dp.getMFE());
             System.out.println("__________");
         }
+    }
+    public static void MFEStructure(){
+        StrandPool sp = new TripletPool(new Base[]{C,A,G}, 3, 1);
+        DP dp = new DP(sp, 4, 3, false, new MFE());
+        System.out.println(dp.backtrack());
     }
     public static void MFEIncreasingStrandLength(){
         for (int n = 1; n < 50; n++){
@@ -204,6 +212,7 @@ public class FinalExperiments {
             case 10 -> strandTypes();
             case 11 -> MFEIncreasingStrandLength();
             case 12 -> MFEIncreasingStrandNumber();
+            case 13 -> MFEStructure();
         }
     }
 }
