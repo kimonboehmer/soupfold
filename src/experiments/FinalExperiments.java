@@ -17,8 +17,8 @@ import static experiments.Sampling.avgBPs;
 import static experiments.Sampling.classifyBasePairs;
 
 public class FinalExperiments {
+    public static Base[] bases = new Base[]{A, C, G, U};
     public static void bpTypes() throws IOException {
-        Base[] bases = new Base[]{A, C, G, U};
         double[][][][] results = new double[64][64][4][3];
         int cV = 0;
         for (Base T : bases) for (Base V : bases) for (Base W : bases) {
@@ -78,10 +78,15 @@ public class FinalExperiments {
         return 0;
     }
     public static void testMFE(){
-        StrandPool sp = new TripletPool(new Base[]{C, Base.A, Base.G}, 20, 1);
-        DP dp = new DP(sp, 4, 3, false, new MFE());
-        System.out.println((int) dp.getMFE());
-        System.out.println(dp.backtrack());
+        for (Base X : bases) for (Base Y : bases) for (Base Z : bases) {
+            StrandPool sp = new TripletPool(new Base[]{X,Y,Z}, 20, 1);
+            DP dp = new DP(sp, 3, 3, false, new MFE());
+            System.out.println(X.toChar());
+            System.out.println(Y.toChar());
+            System.out.println(Z.toChar());
+            System.out.println((int) dp.getMFE());
+            System.out.println("__________");
+        }
     }
     public static void MFEIncreasingStrandLength(){
         for (int n = 1; n < 50; n++){

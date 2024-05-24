@@ -4,6 +4,6 @@ import static experiments.FinalExperiments.doExperiment;
 
 public class Main {
     public static void main(String[] args) throws IOException {
-        doExperiment(1);
+        doExperiment(3);
     }
 }

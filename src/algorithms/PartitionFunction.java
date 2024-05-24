@@ -11,7 +11,7 @@ public class PartitionFunction implements DPType {
     final double BOLTZMANN_CONSTANT = 0.001987;
     public PartitionFunction(double temperature){
         this.bpContrib = Math.exp(1.0 / (temperature * BOLTZMANN_CONSTANT));
-        r = new Random(57);
+        r = new Random();
     }
     public double forbidden(){
         return 0;
@@ -41,7 +41,7 @@ public class PartitionFunction implements DPType {
 
     @Override
     public void btInit(double a) {
-        randomVal = r.nextDouble(a+0.0000001);
+        randomVal = r.nextDouble(a);
     }
 
     @Override
