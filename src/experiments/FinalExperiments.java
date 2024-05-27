@@ -6,18 +6,30 @@ import datastructures.Base;
 import datastructures.SecondaryStructure;
 import datastructures.StrandPool;
 import datastructures.TripletPool;
-
-import java.io.BufferedWriter;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
-
 import static datastructures.Base.*;
 import static experiments.Sampling.avgBPs;
 import static experiments.Sampling.classifyBasePairs;
 
 public class FinalExperiments {
     public static Base[] bases = new Base[]{A, C, G, U};
+    public static void cliqueCheck(){
+        String[] st = new String[]{"AGU20","CAG20","GGC20","UGG20"};
+        for (int m = 1; m < 15; m++) {
+            TripletPool tp = new TripletPool(List.of(st));
+            double[] data = classifyBasePairs(tp, m, 1000);
+            System.out.printf("For m=%d, interior bps: %f, exterior homo-bps: %f, exterior hetero-bps: %f\n", m, data[0], data[1], data[2]);
+        }
+    }
+    public static void singleBpType(){
+        String[] st = new String[]{"CCA20","UGA20"};
+        for (int m = 1; m < 15; m++) {
+            TripletPool tp = new TripletPool(List.of(st));
+            double[] data = classifyBasePairs(tp, m, 1000);
+            System.out.printf("For m=%d, interior bps: %f, exterior homo-bps: %f, exterior hetero-bps: %f\n", m, data[0], data[1], data[2]);
+        }
+    }
     public static void bpTypes() throws IOException {
         double[][][][] results = new double[64][64][4][3];
         int cV = -1;
@@ -62,10 +74,10 @@ public class FinalExperiments {
     }
     public static void strandTypes(){
         StrandPool sp = new TripletPool(new Base[]{C, Base.A, Base.G}, 27, 1);
-        Sampling.expNumOccurencesOfStrands(sp, 3, 10000);
+        Sampling.expNumOccurencesOfStrands(sp, 3, 100000);
     }
     public static double connectivity(){
-        StrandPool sp = new TripletPool(new Base[]{C, Base.G, Base.G}, 5, 1);
+        StrandPool sp = new TripletPool(new Base[]{C, Base.G, Base.G}, 5, 0);
         for (int m = 1; m < 20; m++)
             System.out.printf("Not-connectedness probability with m=%d: %f\n", m, Sampling.connectivityExperiment(sp, m, 10000).getFirst());
         return 0;
@@ -101,11 +113,15 @@ public class FinalExperiments {
         }
     }
     public static void testPartitionFunction(){
-        StrandPool sp = new TripletPool(new Base[]{Base.G, C, Base.G}, 47, 30, 5);
-        for (int i = 0; i < 5 ; i++) System.out.println(sp.getStrandLength(i));
-        DP dp = new DP(sp, 4, 3, true, new PartitionFunction(300));
+        StrandPool sp = new TripletPool(new Base[]{Base.C, A, G}, 13, 0);
+        DP dp = new DP(sp, 2, 3, false, new PartitionFunction(300));
         System.out.println((int) dp.getMFE());
-        System.out.println(dp.backtrack());
+        int cnt = 0;
+        for (int i = 0; i < 100000; i++){
+            SecondaryStructure st = Sampling.sampleAndReject(dp);
+            if (Sampling.detectNumRotationalSymmetries(st) > 1) cnt++;
+        }
+        System.out.printf("Num occurences of rotational symmetries: %d", cnt);
     }
     public static void testDifferentTriplets(){
         LinkedList<Integer> results = new LinkedList<>();
@@ -148,7 +164,7 @@ public class FinalExperiments {
         LinkedList<Integer> sizes = new LinkedList<>();
         Random rand = new Random();
         for (int i = 0; i < 5; i++) sizes.add(rand.nextInt(20, 70));
-        ll.add(new Base[]{C, Base.A, Base.G});
+        ll.add(new Base[]{C, A, G});
         ll.add(new Base[]{Base.A, C, Base.G});
         ll.add(new Base[]{Base.G, C, Base.G});
         ll.add(new Base[]{Base.G, C, C});
@@ -166,9 +182,9 @@ public class FinalExperiments {
     }
     public static void testHeteroTriplets(){
         LinkedList<String> strands = new LinkedList<>();
-        strands.add("CAG8");
+        strands.add("CAG9");
         strands.add("GUU9");
-        strands.add("ACG12");
+        strands.add("ACG9");
         StrandPool sp = new TripletPool(strands);
         DP dp2 = new DP(sp, 3, 3, true, new MFE());
         System.out.println(dp2.getMFE());
@@ -189,20 +205,16 @@ public class FinalExperiments {
     }
     public static void doExperiment(int num) throws IOException {
         switch (num) {
-            case 0 -> bpProbas();
-            case 1 -> bpTypes();
-            case 2 -> connectivity();
-            case 3 -> testMFE();
-            case 4 -> testPartitionFunction();
-            case 5 -> testDifferentTriplets();
-            case 6 -> testHeteroTriplets();
-            case 7 -> testHeteroTriplets2();
-            case 8 -> avgBPForDifferentTripletPatterns();
-            case 9 -> maxBPForDifferentTripletPatterns();
-            case 10 -> strandTypes();
-            case 11 -> MFEIncreasingStrandLength();
-            case 12 -> MFEIncreasingStrandNumber();
-            case 13 -> MFEStructure();
+            case 0 -> {
+                for (int i = 1; i <= 7; i++) doExperiment(i);
+            }
+            case 1 -> MFEStructure();
+            case 2 -> testMFE();
+            case 3 -> MFEIncreasingStrandLength();
+            case 4 -> MFEIncreasingStrandNumber();
+            case 5 -> testHeteroTriplets();
+            case 6 -> singleBpType();
+            case 7 -> bpTypes();
         }
     }
 }

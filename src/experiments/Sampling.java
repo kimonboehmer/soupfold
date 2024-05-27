@@ -56,10 +56,31 @@ public class Sampling {
         for (int i = 0; i < connComps.length; i++){
             int sum = 0;
             for (int j = 0; j < i; j++) sum += connComps[j].size();
-            if (sum == 0) sum = 1;
-            prod *= sum * connComps[i].size();
+            if (i == 0) prod = connComps[i].size();
+            else prod *= (sum + connComps[i].size()) * connComps[i].size();
         }
         return prod;
+    }
+    public static int detectNumRotationalSymmetries(SecondaryStructure st){
+        int m = st.getM();
+        int count = 1;
+        for (int d = 1; d < m; d++) {
+            boolean symm = true;
+            for (int s = 0; s < st.getM(); s++) {
+                if (st.getStrandFromPosition(s) != st.getStrandFromPosition((s + d) % m)){
+                    symm = false;break;
+                }
+                int length = st.getStrandPool().getStrandLength(st.getStrandFromPosition(s));
+                for (int i = 0; i < length; i++){
+                    int ps = st.getPairedStrand(s, i);
+                    if ((ps + (ps<0?0:d)) % m != st.getPairedStrand((s + d) % m, i) || st.getPairedIndex(s, i) != st.getPairedIndex((s + d) % m, i)){
+                        symm = false; s = m; break;
+                    }
+                }
+            }
+            if (symm) count++;
+        }
+        return count;
     }
     public static double[][][][] basePairProbabilities(StrandPool sp, int m, int sampleSize){
         DP dp = new DP(sp, m, 3, true, new PartitionFunction(300));
@@ -138,7 +159,7 @@ public class Sampling {
     }
     public static double[] expNumOccurencesOfStrands(StrandPool sp, int m, int sampleSize){
         double[] data = new double[sp.getNumStrands()];
-        DP dp = new DP(sp, m, 3, false, new PartitionFunction(300));
+        DP dp = new DP(sp, m, 3, false, new PartitionFunction(30000000));
         for (int l = 0; l < sampleSize; l++) {
             SecondaryStructure st = dp.backtrack();
             for (int i = 0; i < m; i++) data[st.getStrandFromPosition(i)]++;
@@ -151,7 +172,7 @@ public class Sampling {
     }
     public static LinkedList<Double> connectivityExperiment(StrandPool sp, int m, int sampleSize){
         int[] ccSize = new int[m+1];
-        DP dp  = new DP(sp, m, 3, false, new PartitionFunction(1000));
+        DP dp  = new DP(sp, m, 3, false, new PartitionFunction(300000000));
         for (int l = 0; l < sampleSize; l++){
             SecondaryStructure s = sampleAndReject(dp);
             LinkedList<Integer>[] cc = connectedComponents(s);
