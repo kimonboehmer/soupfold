@@ -5,7 +5,7 @@ import datastructures.StrandPool;
 
 public class DP {
     private final StrandPool sp;
-    public static final int NOT_SET = 100000;
+    public static final int NOT_SET = -100000000;
     private double mfeValue;
     private final DPType dpt;
     private final int startM;

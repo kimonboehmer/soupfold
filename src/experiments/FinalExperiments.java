@@ -14,6 +14,32 @@ import static experiments.Sampling.classifyBasePairs;
 
 public class FinalExperiments {
     public static Base[] bases = new Base[]{A, C, G, U};
+
+    public static void speedTest(){
+        long[] times = new long[20];
+        StrandPool sp = new TripletPool(List.of(new String[]{"CAG17","GCC17","UUA17","CGG17","UAC17","GAU17"}));
+        for (int m = 1; m < 21; m++){
+            long startTime = System.nanoTime();
+            DP dp = new DP(sp, m, 3, true, new MFE());
+            System.out.println(dp.getMFE());
+            long endTime = System.nanoTime();
+            times[m-1] = endTime - startTime;
+            System.out.printf("MFE: Needed time: %d\n", (endTime - startTime) / 1000000);
+        }
+        System.out.println(Arrays.toString(times));
+    }
+    public static void mfeObserveProbability(){
+        StrandPool sp = new TripletPool(new Base[]{C,A,G}, 20, 0);
+        for (int m = 1; m <= 10; m++){
+            DP dp = new DP(sp, m, 3, true, new MFE());
+            double mfe = dp.getMFE();
+            DP pf = new DP(sp, m, 3, true, new PartitionFunction(300));
+            double pfValue = pf.getMFE();
+            //System.out.println(pfValue);
+            System.out.printf("for m=%d, MFE probability: ", m);
+            System.out.println(Math.exp(-mfe / (300 * 0.001987)) / pfValue);
+        }
+    }
     public static void cliqueCheck(){
         String[] st = new String[]{"AGU20","CAG20","GGC20","UGG20"};
         for (int m = 1; m < 15; m++) {
@@ -23,7 +49,7 @@ public class FinalExperiments {
         }
     }
     public static void singleBpType(){
-        String[] st = new String[]{"CCA20","UGA20"};
+        String[] st = new String[]{"CCG20","UAA20","UCA20"};
         for (int m = 1; m < 15; m++) {
             TripletPool tp = new TripletPool(List.of(st));
             double[] data = classifyBasePairs(tp, m, 1000);
@@ -215,6 +241,8 @@ public class FinalExperiments {
             case 5 -> testHeteroTriplets();
             case 6 -> singleBpType();
             case 7 -> bpTypes();
+            case 8 -> mfeObserveProbability();
+            case 9 -> speedTest();
         }
     }
 }
