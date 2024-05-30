@@ -14,7 +14,7 @@ The input to the algorithm is given as a `StrandPool`. This interface must retur
 
 The constructor for `GeneralPool` is as follows:<br>
 `public GeneralPool(String[] strandArray)`<br>
-The strands are given as strings and must be words over $\{A,C,G,U\}$.
+The strands are given as strings and must be words over ${A,C,G,U}$.
 #### Triplet pool
 
 You should use this strand pool if all RNA strands are triplet repeats, i.e. of the form $(XYZ)^k$ for $X,Y,Z \in \{A,C,G,U\}$ and $k>0$. The stored DP table uses the repetitive structure of triplet repeats to improve the running time.<br>
