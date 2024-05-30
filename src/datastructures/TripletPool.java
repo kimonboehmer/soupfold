@@ -21,7 +21,7 @@ public class TripletPool implements StrandPool {
     int numPatterns;
     private final Base[][] patternArray;
     private final Triplet[] pool;
-    double[][][][][][] M;
+    private double[][][][][][] M;
     public TripletPool(Base[] pattern, int mid, int rad, int num){
         pool = new Triplet[num];
         Random rand = new Random(1);

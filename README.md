@@ -43,7 +43,8 @@ For the partition function, we need to specify the temperature in Kelvin. For ex
 
 ### Simple example
 
-`LinkedList<String> strands = new LinkedList<>();
+```
+LinkedList<String> strands = new LinkedList<>();
 strands.add("CAG9");
 strands.add("GUU9");
 strands.add("ACG9");
@@ -55,7 +56,8 @@ System.out.printf("Secondary structure with minimum free energy: %s", st);
 DP pf = new DP(sp, 3, 3, true, new PartitionFunction(300));
 SecondaryStructure st = mfe.backtrack();
 System.out.printf("Partition Function value: %s", mfe.getMFE());
-System.out.printf("Sampled secondary structure from the Boltzmann ensemble: %s", st);`
+System.out.printf("Sampled secondary structure from the Boltzmann ensemble: %s", st);
+```
 
 
 
