@@ -14,12 +14,12 @@ The input to the algorithm is given as a `StrandPool`. This interface must retur
 
 The constructor for `GeneralPool` is as follows:<br>
 `public GeneralPool(String[] strandArray)`<br>
-The strands are given as strings and must be words over ${A,C,G,U}$.
+The strands are given as strings and must be words over $`\{A,C,G,U\}`$.
 #### Triplet pool
 
-You should use this strand pool if all RNA strands are triplet repeats, i.e. of the form $(XYZ)^k$ for $X,Y,Z \in \{A,C,G,U\}$ and $k>0$. The stored DP table uses the repetitive structure of triplet repeats to improve the running time.<br>
+You should use this strand pool if all RNA strands are triplet repeats, i.e. of the form $(XYZ)^k$ for $`X,Y,Z \in \{A,C,G,U\}`$ and $k>0$. The stored DP table uses the repetitive structure of triplet repeats to improve the running time.<br>
 There are three constructors:
-- `public TripletPool(List<String> strands)`: The input format is a list of strings of tge form $XYZn$, where $X,Y,Z \in \{A,C,G,U\}$ and $n>0$ is a positive integer which denotes the number of repeats of pattern $XYZ$.
+- `public TripletPool(List<String> strands)`: The input format is a list of strings of the form '$`XYZn`$', where $`X,Y,Z \in \{A,C,G,U\}`$ and $n>0$ is a positive integer which denotes the number of repeats of pattern $XYZ$.
 - `public TripletPool(Base[] pattern, int mid, int rad)`: This creates a _homogeneous_ triplet pool of pattern `pattern`. Exactly all strand lengths from `mid`-`rad` to `mid`+`rad` are represented in the pool.
 - `TripletPool(Base[] pattern, int mid, int rad, int num)`: This is again a homogeneous triplet pool. Compared to the previous constructor, not all strand lengths in the interval from `mid`-`rad` to `mid`+`rad` are represented, but only `num` random ones.
 
