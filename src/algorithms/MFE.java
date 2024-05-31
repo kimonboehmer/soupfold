@@ -37,7 +37,7 @@ public class MFE implements DPType {
     }
 
     @Override
-    public double strandPenalty(int length) {
+    public double strandPenalty(int strand, int length) {
         return 0;
     }
 

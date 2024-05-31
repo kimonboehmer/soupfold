@@ -6,6 +6,7 @@ import datastructures.SecondaryStructure;
 import datastructures.StrandPool;
 import datastructures.TripletPool;
 
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Random;
@@ -217,5 +218,36 @@ public class Sampling {
         }
         double sum = interior + homoExt + heteroExt;
         return new double[]{interior / sum, homoExt / sum, heteroExt / sum};
+    }
+    public static double[][] classifyBasePairsDetailed(TripletPool sp, int m, int sampleSize){
+        double[] interior = new double[sp.getNumStrands()];
+        double[][] exterior = new double[sp.getNumStrands()][sp.getNumStrands()];
+        int[] c = new int[4];
+        DP dp = new DP(sp, m, 3, true, new PartitionFunction(300));
+        for (int l = 0; l < sampleSize; l++){
+            SecondaryStructure st = dp.backtrack();
+            for (int s = 0; s < m; s++){
+                c[st.getStrandFromPosition(s)]++;
+                for (int i = 0; i < sp.getStrandLength(st.getStrandFromPosition(s)); i++){
+                    int r = st.getPairedStrand(s, i);
+                    if (r < 0) continue;
+                    if (s == r) interior[st.getStrandFromPosition(s)]++;
+                    else exterior[st.getStrandFromPosition(s)][st.getStrandFromPosition(r)]++;
+                }
+            }
+        }
+        String[] s = new String[]{"CAG","CCG","GAU","UAG"};
+        System.out.println(";CAG;CCG;GAU;UAG");
+        for (int i = 0; i < 4; i++) {
+            System.out.printf("%s;", s[i]);
+            double nominatorI = (interior[i] + exterior[i][0]+exterior[i][1]+exterior[i][2]+exterior[i][3]);
+            //System.out.printf("Probability of BPs for %s being interior: %f\n", s[i], interior[i] / nominatorI);
+            for (int j = 0; j < 4; j++){
+                System.out.printf("%s;",exterior[i][j] / nominatorI);
+            }
+            System.out.printf("%s\n",interior[i] / nominatorI);
+        }
+        System.out.println(Arrays.toString(c));
+        return exterior;
     }
 }

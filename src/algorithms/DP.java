@@ -24,7 +24,7 @@ public class DP {
     private double minOverStrands(int m, int r, int j){
         double res = dpt.forbidden();
         for (int t = 0; t < sp.getNumStrands();t++){
-            double val = dpt.sum(getOrComputeM(m, t, 0, r, j, conn), dpt.strandPenalty(sp.getStrandLength(t)));
+            double val = dpt.sum(getOrComputeM(m, t, 0, r, j, conn), dpt.strandPenalty(t,sp.getStrandLength(t)));
             res = dpt.min(res, val);
         }
         return res;
@@ -32,7 +32,7 @@ public class DP {
     private double minOverSecStrands(int m, int s, int i){
         double res = dpt.forbidden();
         for (int u = 0; u < sp.getNumStrands(); u++){
-            double val = dpt.sum(getOrComputeM(m, s, i, u, sp.getStrandLength(u) - 1, conn), dpt.strandPenalty(sp.getStrandLength(u)));
+            double val = dpt.sum(getOrComputeM(m, s, i, u, sp.getStrandLength(u) - 1, conn), dpt.strandPenalty(u,sp.getStrandLength(u)));
             res = dpt.min(res, val);
         }
         return res;
@@ -62,13 +62,13 @@ public class DP {
             double res = dpt.forbidden();
             if (m == 3){
                 for (int t = 0; t < sp.getNumStrands();t++){
-                    double val = dpt.sum(getOrComputeM(1, t, 0, t, sp.getStrandLength(t)-1, false), dpt.strandPenalty(sp.getStrandLength(t)));
+                    double val = dpt.sum(getOrComputeM(1, t, 0, t, sp.getStrandLength(t)-1, false), dpt.strandPenalty(t,sp.getStrandLength(t)));
                     res = dpt.min(res, val);
                 }
             }
             else{
                 for (int t = 0; t < sp.getNumStrands(); t++) for (int u = 0; u < sp.getNumStrands(); u++){
-                    double val = dpt.sum(dpt.sum(getOrComputeM(m-2, t, 0, u, sp.getStrandLength(u) - 1, false), dpt.strandPenalty(sp.getStrandLength(t))), dpt.strandPenalty(sp.getStrandLength(u)));
+                    double val = dpt.sum(dpt.sum(getOrComputeM(m-2, t, 0, u, sp.getStrandLength(u) - 1, false), dpt.strandPenalty(t,sp.getStrandLength(t))), dpt.strandPenalty(u,sp.getStrandLength(u)));
                     res = dpt.min(res, val);
                 }
             }
@@ -99,7 +99,7 @@ public class DP {
             }
             else for (int t = 0; t < sp.getNumStrands(); t++){
                 for (int k = 0; k < sp.getStrandLength(t); k++) if(bp(s, i, t, k)){
-                    double val = dpt.sum(dpt.sum(dpt.sum(dpt.E(), M(mm, s, i, t, k, false)), M(m-mm+1, t, k, r, j+1, c)), dpt.strandPenalty(sp.getStrandLength(t)));
+                    double val = dpt.sum(dpt.sum(dpt.sum(dpt.E(), M(mm, s, i, t, k, false)), M(m-mm+1, t, k, r, j+1, c)), dpt.strandPenalty(t,sp.getStrandLength(t)));
                     mfe = dpt.min(mfe, val);
                 }
             }
@@ -141,11 +141,11 @@ public class DP {
         double mfe = dpt.forbidden();
         for (int s = 0; s < sp.getNumStrands(); s++) {
             if (startM == 1){
-                double val = dpt.sum(getOrComputeM(startM, s, 0, s, sp.getStrandLength(s) - 1, false), dpt.strandPenalty(sp.getStrandLength(s)));
+                double val = dpt.sum(getOrComputeM(startM, s, 0, s, sp.getStrandLength(s) - 1, false), dpt.strandPenalty(s,sp.getStrandLength(s)));
                 mfe = dpt.min(mfe, val);
             }
             else for (int r = 0; r < sp.getNumStrands(); r++) {
-                double val = dpt.sum(dpt.sum(getOrComputeM(startM, s, 0, r, sp.getStrandLength(r) - 1, conn), dpt.strandPenalty(sp.getStrandLength(s))), dpt.strandPenalty(sp.getStrandLength(r)));
+                double val = dpt.sum(dpt.sum(getOrComputeM(startM, s, 0, r, sp.getStrandLength(r) - 1, conn), dpt.strandPenalty(s,sp.getStrandLength(s))), dpt.strandPenalty(r,sp.getStrandLength(r)));
                 mfe = dpt.min(mfe, val);
             }
         }
@@ -163,7 +163,7 @@ public class DP {
         for (int s = 0; s < sp.getNumStrands(); s++){
             if (startM == 1){ // in case m = 1, the start- and end-strand has to be the same
                 double v = sp.getM(startM, s, 0, s, sp.getStrandLength(s) - 1, false);
-                if (dpt.btChoose(dpt.sum(v, dpt.strandPenalty(sp.getStrandLength(s))))) {
+                if (dpt.btChoose(dpt.sum(v, dpt.strandPenalty(s,sp.getStrandLength(s))))) {
                     mfeStructure.setStrandRank(s, 0);
                     recBacktrack(s, 0, s, sp.getStrandLength(s) - 1,  false, 0, 0, v);
                     return mfeStructure;
@@ -171,7 +171,7 @@ public class DP {
             }
         else for (int r = 0; r < sp.getNumStrands(); r++) {
             double v = sp.getM(startM, s, 0, r, sp.getStrandLength(r) - 1, conn);
-            if (dpt.btChoose(dpt.sum(dpt.sum(v, dpt.strandPenalty(sp.getStrandLength(s))), dpt.strandPenalty(sp.getStrandLength(r))))) {
+            if (dpt.btChoose(dpt.sum(dpt.sum(v, dpt.strandPenalty(s,sp.getStrandLength(s))), dpt.strandPenalty(r,sp.getStrandLength(r))))) {
                 mfeStructure.setStrandRank(s, 0);
                 mfeStructure.setStrandRank(r, startM - 1);
                 recBacktrack(s, 0, r, sp.getStrandLength(r) - 1,  conn, 0, startM - 1, v);
@@ -199,7 +199,7 @@ public class DP {
             }
             else for (int t = 0; t < sp.getNumStrands(); t++) {
                 double v = sp.getM(m - 1, t, 0, r, j, conn) ;
-                if (dpt.btChoose(dpt.sum(v, dpt.strandPenalty(sp.getStrandLength(t))))) {
+                if (dpt.btChoose(dpt.sum(v, dpt.strandPenalty(t,sp.getStrandLength(t))))) {
                     mfeStructure.setStrandRank(t, left + 1);
                     return recBacktrack(t, 0, r, j, conn, left + 1, right, v);
                 }
@@ -236,7 +236,7 @@ public class DP {
                     for (int k = 0; k < sp.getStrandLength(t); k++){
                         double m1 = M(mm, s, i, t, k, false);
                         double m2 = M(m-mm+1, t, k, r, j+1, c);
-                        if (bp(s,i,t,k) && dpt.btChoose(dpt.sum(dpt.sum(dpt.sum(dpt.E(),m1), m2), dpt.strandPenalty(sp.getStrandLength(t))))){
+                        if (bp(s,i,t,k) && dpt.btChoose(dpt.sum(dpt.sum(dpt.sum(dpt.E(),m1), m2), dpt.strandPenalty(t,sp.getStrandLength(t))))){
                             mfeStructure.setBasePair(left, i, left+mm-1, k);
                             mfeStructure.setStrandRank(t, left + mm - 1);
                             return     backtrackHelper(mm, s, i, t, k, false, left, left + mm - 1, m1)
@@ -272,7 +272,7 @@ public class DP {
                 }
             } else for (int t = 0; t < sp.getNumStrands(); t++) {
                 double v = sp.getM(m - 1, t, 0, r, j - 1, conn);
-                if (dpt.btChoose(dpt.sum(v, dpt.strandPenalty(sp.getStrandLength(t))))) {
+                if (dpt.btChoose(dpt.sum(v, dpt.strandPenalty(t,sp.getStrandLength(t))))) {
                     mfeStructure.setStrandRank(t, left + 1);
                     return recBacktrack(t, 0, r, j - 1, conn, left + 1, right, v);
                 }
@@ -289,7 +289,7 @@ public class DP {
                 }
                 else for (int u = 0; u < sp.getNumStrands(); u++){
                     double v = sp.getM(m-1, s, i+1, u, sp.getStrandLength(u)-1, conn);
-                    if (dpt.btChoose(dpt.sum(v, dpt.strandPenalty(sp.getStrandLength(u))))){
+                    if (dpt.btChoose(dpt.sum(v, dpt.strandPenalty(u,sp.getStrandLength(u))))){
                         mfeStructure.setStrandRank(u, right-1);
                         return recBacktrack(s, i+1, u, sp.getStrandLength(u)-1, conn, left, right-1, v);
                     }
@@ -300,7 +300,7 @@ public class DP {
             if (m == 3){
                 for (int t = 0; t < sp.getNumStrands(); t++){
                     double v = sp.getM(1, t, 0, t, sp.getStrandLength(t)-1, conn);
-                    if (dpt.btChoose(dpt.sum(v, dpt.strandPenalty(sp.getStrandLength(t))))){
+                    if (dpt.btChoose(dpt.sum(v, dpt.strandPenalty(t,sp.getStrandLength(t))))){
                         mfeStructure.setStrandRank(t, right-1);
                         return recBacktrack(t, 0, t, sp.getStrandLength(t)-1, conn, left+1, right-1, v);
                     }
@@ -308,7 +308,7 @@ public class DP {
             }
             for (int t = 0; t < sp.getNumStrands(); t++) for (int u = 0; u < sp.getNumStrands(); u++){
                 double v = sp.getM(m-2, t, 0, u, sp.getStrandLength(u)-1, conn);
-                if (dpt.btChoose(dpt.sum(dpt.sum(v, dpt.strandPenalty(sp.getStrandLength(t))), dpt.strandPenalty(sp.getStrandLength(u))))){
+                if (dpt.btChoose(dpt.sum(dpt.sum(v, dpt.strandPenalty(t,sp.getStrandLength(t))), dpt.strandPenalty(u,sp.getStrandLength(u))))){
                     mfeStructure.setStrandRank(t, left+1);
                     mfeStructure.setStrandRank(u, right-1);
                     return recBacktrack(t, 0, u, sp.getStrandLength(u)-1, conn, left+1, right-1, v);

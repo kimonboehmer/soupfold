@@ -45,7 +45,11 @@ public class PartitionFunction implements DPType {
     }
 
     @Override
-    public double strandPenalty(int length) {
+    public double strandPenalty(int strand, int length) {
+        /* For experiment 9:
+        if (strand == 0) return 90000;
+        if (strand == 2) return 1.15;
+        if (strand == 3) return 0.9;*/
         return Math.pow(1, length) ;
     }
 

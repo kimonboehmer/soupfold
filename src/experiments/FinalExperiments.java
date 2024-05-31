@@ -9,15 +9,14 @@ import datastructures.TripletPool;
 import java.io.IOException;
 import java.util.*;
 import static datastructures.Base.*;
-import static experiments.Sampling.avgBPs;
-import static experiments.Sampling.classifyBasePairs;
+import static experiments.Sampling.*;
 
 public class FinalExperiments {
     public static Base[] bases = new Base[]{A, C, G, U};
 
-    public static void speedTest(){
+    private static void speedTest(){
         long[] times = new long[20];
-        StrandPool sp = new TripletPool(List.of(new String[]{"CAG17","GCC17","UUA17","CGG17","UAC17","GAU17"}));
+        StrandPool sp = new TripletPool(List.of(new String[]{"CAG17","GCC17","CGG17","UAC17","GAU17"}));
         for (int m = 1; m < 21; m++){
             long startTime = System.nanoTime();
             DP dp = new DP(sp, m, 3, true, new MFE());
@@ -28,7 +27,7 @@ public class FinalExperiments {
         }
         System.out.println(Arrays.toString(times));
     }
-    public static void mfeObserveProbability(){
+    private static void mfeObserveProbability(){
         StrandPool sp = new TripletPool(new Base[]{C,A,G}, 20, 0);
         for (int m = 1; m <= 10; m++){
             DP dp = new DP(sp, m, 3, true, new MFE());
@@ -40,7 +39,7 @@ public class FinalExperiments {
             System.out.println(Math.exp(-mfe / (300 * 0.001987)) / pfValue);
         }
     }
-    public static void cliqueCheck(){
+    private static void cliqueCheck(){
         String[] st = new String[]{"AGU20","CAG20","GGC20","UGG20"};
         for (int m = 1; m < 15; m++) {
             TripletPool tp = new TripletPool(List.of(st));
@@ -48,15 +47,23 @@ public class FinalExperiments {
             System.out.printf("For m=%d, interior bps: %f, exterior homo-bps: %f, exterior hetero-bps: %f\n", m, data[0], data[1], data[2]);
         }
     }
-    public static void singleBpType(){
-        String[] st = new String[]{"CCG20","UAA20","UCA20"};
+    private static void singleBpType(){
+        String[] st = new String[]{"CAG20","CCG20","GAU20","UAG20"};
         for (int m = 1; m < 15; m++) {
             TripletPool tp = new TripletPool(List.of(st));
             double[] data = classifyBasePairs(tp, m, 1000);
             System.out.printf("For m=%d, interior bps: %f, exterior homo-bps: %f, exterior hetero-bps: %f\n", m, data[0], data[1], data[2]);
         }
     }
-    public static void bpTypes() throws IOException {
+    private static void singleBpTypeDetailed(){
+        String[] st = new String[]{"CAG20","CCG20","GAU20","UAG20;interior"};
+        for (int m = 10; m < 11; m++) {
+            TripletPool tp = new TripletPool(List.of(st));
+            double[][] data = classifyBasePairsDetailed(tp, m, 1000);
+
+        }
+    }
+    private static void bpTypes() throws IOException {
         double[][][][] results = new double[64][64][4][3];
         int cV = -1;
         for (Base T : bases) for (Base V : bases) for (Base W : bases) {
@@ -94,21 +101,21 @@ public class FinalExperiments {
             Helper.writeCSV(data, "table_m"+(m+2)+"_t"+t+".csv");
         }
     }
-    public static void bpProbas(){
+    private static void bpProbas(){
         StrandPool sp = new TripletPool(new Base[]{C, Base.A, Base.G}, 27, 1);
         for (int m = 1; m < 10; m++) System.out.println(Sampling.interactionProbability(sp, m, 100000));
     }
-    public static void strandTypes(){
+    private static void strandTypes(){
         StrandPool sp = new TripletPool(new Base[]{C, Base.A, Base.G}, 27, 1);
         Sampling.expNumOccurencesOfStrands(sp, 3, 100000);
     }
-    public static double connectivity(){
+    private static double connectivity(){
         StrandPool sp = new TripletPool(new Base[]{C, Base.G, Base.G}, 5, 0);
         for (int m = 1; m < 20; m++)
             System.out.printf("Not-connectedness probability with m=%d: %f\n", m, Sampling.connectivityExperiment(sp, m, 10000).getFirst());
         return 0;
     }
-    public static void testMFE(){
+    private static void testMFE(){
         for (Base X : bases) for (Base Y : bases) for (Base Z : bases) {
             StrandPool sp = new TripletPool(new Base[]{X,Y,Z}, 20, 1);
             DP dp = new DP(sp, 3, 3, false, new MFE());
@@ -119,26 +126,26 @@ public class FinalExperiments {
             System.out.println("__________");
         }
     }
-    public static void MFEStructure(){
+    private static void MFEStructure(){
         StrandPool sp = new TripletPool(new Base[]{C,A,G}, 3, 1);
         DP dp = new DP(sp, 4, 3, false, new MFE());
         System.out.println(dp.backtrack());
     }
-    public static void MFEIncreasingStrandLength(){
+    private static void MFEIncreasingStrandLength(){
         for (int n = 1; n < 50; n++){
             StrandPool sp = new TripletPool(new Base[]{C, Base.A, Base.G}, n, 0);
             DP dp = new DP(sp, 4, 3, true, new MFE());
             System.out.printf("n=%d: %d\n", n, (int) dp.getMFE());
         }
     }
-    public static void MFEIncreasingStrandNumber(){
+    private static void MFEIncreasingStrandNumber(){
         for (int m = 1; m < 20; m++){
             StrandPool sp = new TripletPool(new Base[]{C, Base.A, Base.G}, 15, 0);
             DP dp = new DP(sp, m, 3, true, new MFE());
             System.out.printf("m=%d: %d\n", m, (int) dp.getMFE());
         }
     }
-    public static void testPartitionFunction(){
+    private static void testPartitionFunction(){
         StrandPool sp = new TripletPool(new Base[]{Base.C, A, G}, 13, 0);
         DP dp = new DP(sp, 2, 3, false, new PartitionFunction(300));
         System.out.println((int) dp.getMFE());
@@ -149,7 +156,7 @@ public class FinalExperiments {
         }
         System.out.printf("Num occurences of rotational symmetries: %d", cnt);
     }
-    public static void testDifferentTriplets(){
+    private static void testDifferentTriplets(){
         LinkedList<Integer> results = new LinkedList<>();
         LinkedList<Base[]> ll = new LinkedList<>();
         ll.add(new Base[]{C, Base.A, Base.G});
@@ -163,7 +170,7 @@ public class FinalExperiments {
         }
         System.out.println(results);
     }
-    public static void avgBPForDifferentTripletPatterns(){
+    private static void avgBPForDifferentTripletPatterns(){
         LinkedList<Double> results = new LinkedList<>();
         LinkedList<Base[]> ll = new LinkedList<>();
         LinkedList<Integer> sizes = new LinkedList<>();
@@ -184,7 +191,7 @@ public class FinalExperiments {
         }
         System.out.println(results);
     }
-    public static void maxBPForDifferentTripletPatterns(){
+    private static void maxBPForDifferentTripletPatterns(){
         LinkedList<Double> results = new LinkedList<>();
         LinkedList<Base[]> ll = new LinkedList<>();
         LinkedList<Integer> sizes = new LinkedList<>();
@@ -206,7 +213,7 @@ public class FinalExperiments {
         }
         System.out.println(results);
     }
-    public static void testHeteroTriplets(){
+    private static void testHeteroTriplets(){
         LinkedList<String> strands = new LinkedList<>();
         strands.add("CAG9");
         strands.add("GUU9");
@@ -217,7 +224,7 @@ public class FinalExperiments {
         SecondaryStructure st = dp2.backtrack();
         System.out.println(st.toString());
     }
-    public static void testHeteroTriplets2(){
+    private static void testHeteroTriplets2(){
         LinkedList<String> strands = new LinkedList<>();
         strands.add("CAG40");
         strands.add("GUU45");
@@ -241,8 +248,8 @@ public class FinalExperiments {
             case 5 -> testHeteroTriplets();
             case 6 -> singleBpType();
             case 7 -> bpTypes();
-            case 8 -> mfeObserveProbability();
-            case 9 -> speedTest();
+            case 8 -> speedTest();
+            case 9 -> singleBpTypeDetailed();
         }
     }
 }
