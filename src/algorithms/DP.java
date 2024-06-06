@@ -12,6 +12,15 @@ public class DP {
     private final int theta;
     private final boolean conn;
     private SecondaryStructure mfeStructure;
+
+    /**
+     * @param sp strand pool on which the DP operates
+     * @param m total number of required interacting strands
+     * @param theta minimum base pair span
+     * @param conn true if connectivity of the secondary structure is required
+     * @param dpt MFE or PartitionFunction, depending on the wished computation.
+     * Initializes the DP *and* computes the MFE/PF immediately.
+     */
     public DP(StrandPool sp, int m, int theta, boolean conn, DPType dpt){
         this.sp = sp;
         this.theta = theta;
@@ -21,6 +30,13 @@ public class DP {
         this.dpt = dpt;
         mfeValue = computeMFE();
     }
+
+    /**
+     * @param m number of remaining strands
+     * @param r rightmost strand
+     * @param j position on r
+     * @return MFE/PF for the region from [t_1,r_j], minimized over all choices for t
+     */
     private double minOverStrands(int m, int r, int j){
         double res = dpt.forbidden();
         for (int t = 0; t < sp.getNumStrands();t++){
@@ -29,6 +45,13 @@ public class DP {
         }
         return res;
     }
+
+    /**
+     * @param m number of remaining strand
+     * @param s leftmost strand
+     * @param i position on s
+     * @return MFE/PF for the region from [m,s_i,u_|u|], minimized over all choices for u
+     */
     private double minOverSecStrands(int m, int s, int i){
         double res = dpt.forbidden();
         for (int u = 0; u < sp.getNumStrands(); u++){
@@ -37,9 +60,19 @@ public class DP {
         }
         return res;
     }
+
+    /**
+     * @param m number of remaining strands
+     * @param s leftmost strand
+     * @param i position on s
+     * @param r rightmost strand
+     * @param j position on r
+     * @param c true if structure is connected
+     * @return MFE/PF for the interval ]m,s_i,r_j,c[.
+     */
     private double M(int m, int s, int i, int r, int j, boolean c){
         if (m==0) return dpt.initValue();
-        if (m==1) {
+        if (m==1) { // if the open region is single-stranded and not empty, compute the included closed region
             if (i+1 < sp.getStrandLength(s) && j > 0 && j > i+1) return getOrComputeM(1, s, i+1, s, j-1, false);
             return dpt.initValue();
         }
@@ -58,15 +91,15 @@ public class DP {
         }
         if (m == 2) return dpt.initValue();
         if (conn) return dpt.forbidden();
-        else{
+        else{ // structure does not need to be connected and we are at the endpoints of two strands
             double res = dpt.forbidden();
-            if (m == 3){
+            if (m == 3){ // if we had 3 strands, one central strand is remaining
                 for (int t = 0; t < sp.getNumStrands();t++){
                     double val = dpt.sum(getOrComputeM(1, t, 0, t, sp.getStrandLength(t)-1, false), dpt.strandPenalty(t,sp.getStrandLength(t)));
                     res = dpt.min(res, val);
                 }
             }
-            else{
+            else{ // else, we have to minimize/sum over two inner strands
                 for (int t = 0; t < sp.getNumStrands(); t++) for (int u = 0; u < sp.getNumStrands(); u++){
                     double val = dpt.sum(dpt.sum(getOrComputeM(m-2, t, 0, u, sp.getStrandLength(u) - 1, false), dpt.strandPenalty(t,sp.getStrandLength(t))), dpt.strandPenalty(u,sp.getStrandLength(u)));
                     res = dpt.min(res, val);
@@ -75,13 +108,31 @@ public class DP {
             return res;
         }
     }
+
+    /**
+     * @param s strand of left base pair endpoint
+     * @param i position of left base pair endpoint
+     * @param r strand of right base pair endpoint
+     * @param j position of right base pair endpoint
+     * @return true iff (s_i,r_j) is a valid base pair
+     */
     private boolean bp(int s, int i, int r, int j){
         return (Base.pair(sp.getBase(s, i), sp.getBase(r, j)));
     }
+
+    /**
+     * @param m number of remaining strands
+     * @param s leftmost strand
+     * @param i position on s
+     * @param r rightmost strand
+     * @param j position on r
+     * @param c true if structure is connected
+     * @return MFE/PF over the interval [m,s_i,r_j,c] where s_i is paired
+     */
     private double computeMultiloop(int m, int s, int i, int r, int j, boolean c){
         double mfe = dpt.forbidden();
         for (int mm = 1; mm <= m; mm++){
-            if (mm == 1){
+            if (mm == 1){ //case 1: interior base pair
                 int lim = sp.getStrandLength(s) - 1;
                 if (m == 1) lim = j;
                 for (int k = i + theta + 1; k <= lim; k++) {
@@ -91,13 +142,13 @@ public class DP {
                     }
                 }
             }
-            else if (mm == m){
+            else if (mm == m){ //case 2: the base pair connects s and r
                 for (int k = 0; k <= j; k++) if (bp(s,i,r,k)){
                     double val = dpt.sum(dpt.sum(dpt.E(), M(m, s, i, r, k, false)),M(1, r, k, r, j+1, false));
                     mfe = dpt.min(mfe, val);
                 }
             }
-            else for (int t = 0; t < sp.getNumStrands(); t++){
+            else for (int t = 0; t < sp.getNumStrands(); t++){ //case 3: the base pair connects s and some t
                 for (int k = 0; k < sp.getStrandLength(t); k++) if(bp(s, i, t, k)){
                     double val = dpt.sum(dpt.sum(dpt.sum(dpt.E(), M(mm, s, i, t, k, false)), M(m-mm+1, t, k, r, j+1, c)), dpt.strandPenalty(t,sp.getStrandLength(t)));
                     mfe = dpt.min(mfe, val);
@@ -108,13 +159,13 @@ public class DP {
     }
 
     /**
-     * @param m number of still available strands
+     * @param m number of remaining strands
      * @param s index of leftmost strand
      * @param i leftmost position on s
      * @param r index of rightmost strand
      * @param j rightmost position on r
      * @param c true if s and r have to be connected, false else
-     * @return minimum free energy value for an interval from s_i to r_j on m strands, respecting the connectivity bit c.
+     * @return MFE/PF for interval [m,s_i,r_j,c]
      */
     private double computeMFERegion(int m, int s, int i, int r, int j, boolean c){
         double unpaired;
@@ -125,22 +176,38 @@ public class DP {
             else unpaired = minOverStrands(m - 1, r, j);
         }
         double multi = computeMultiloop(m, s, i, r, j, c);
-        double mfe = dpt.min(unpaired, multi);
+        double mfe = dpt.min(unpaired, multi); //minimize/sum over unpaired and paired s_i
         sp.setM(m, s, i, r, j, c, mfe);
         return mfe;
     }
+
+    /**
+     * @param m number of remaining strands
+     * @param s leftmost strand
+     * @param i position on s
+     * @param r rightmost strand
+     * @param j position on r
+     * @param c true if structure is connected
+     * Queries a table entry, and computes it if the entry is not filled.
+     * @return MFE/PF for interval [m,s_i,r_j,c]
+     */
     private double getOrComputeM(int m, int s, int i, int r, int j, boolean c){
-        double val = sp.getM(m, s, i, r, j, c);
-        if (val == NOT_SET){
+        double val = sp.getM(m, s, i, r, j, c); //query the DP table
+        if (val == NOT_SET){ // if the value is not set yet, compute it
             val = computeMFERegion(m, s, i, r, j, c);
         }
         return val;
     }
+
+    /**
+     * @return the MFE/PF over the complete set of strands, with the given startM.
+     * Fills the DP tables and thus allows backtracking to be called.
+     */
     private double computeMFE(){
         sp.initializeTable(startM, theta, dpt.initValue());
         double mfe = dpt.forbidden();
-        for (int s = 0; s < sp.getNumStrands(); s++) {
-            if (startM == 1){
+        for (int s = 0; s < sp.getNumStrands(); s++) { // minimize/sum over outermost strands
+            if (startM == 1){ // if there is only a single strand, s and r must be equal
                 double val = dpt.sum(getOrComputeM(startM, s, 0, s, sp.getStrandLength(s) - 1, false), dpt.strandPenalty(s,sp.getStrandLength(s)));
                 mfe = dpt.min(mfe, val);
             }
@@ -181,6 +248,19 @@ public class DP {
         }
         return mfeStructure;
     }
+
+    /**
+     * @param s leftmost strand
+     * @param i position on s
+     * @param r rightmost strand
+     * @param j position on r
+     * @param c true if the structure is connected
+     * @param left position in the strand permutation of the leftmost strand
+     * @param right position in the strand permutation of the rightmost strand
+     * @param val target MFE/PF value.
+     * Recursively builds the secondary structure stored in "mfeStructure".
+     * @return true if no error occurred
+     */
     private boolean recBacktrack(int s, int i, int r, int j, boolean c, int left, int right, double val) {
         dpt.btInit(val);
         if (val == 0) return true;
@@ -207,6 +287,20 @@ public class DP {
         }
         return backtrackMultiloop(m, s, i, r, j, c, left, right);
     }
+
+    /**
+     * @param s leftmost strand
+     * @param i position on s
+     * @param r rightmost strand
+     * @param j position on r
+     * @param c true if the structure is connected
+     * @param left position in the strand permutation of the leftmost strand
+     * @param right position in the strand permutation of the rightmost strand
+     * Recursively builds the secondary structure stored in "mfeStructure",
+     * for the case where s_i is paired.
+     * val is propagated from the previous call.
+     * @return true if no error occurred
+     */
     private boolean backtrackMultiloop(int m, int s, int i, int r, int j, boolean c, int left, int right){
         for (int mm = 1; mm <= m; mm++){
             if (mm == 1){
@@ -246,6 +340,20 @@ public class DP {
         }
         throw new RuntimeException("Inconsistent Backtracking - needs bug fixing!");
     }
+
+    /**
+     * @param s leftmost strand
+     * @param i position on s
+     * @param r rightmost strand
+     * @param j position on r
+     * @param c true if the structure is connected
+     * @param left position in the strand permutation of the leftmost strand
+     * @param right position in the strand permutation of the rightmost strand
+     * @param val target MFE/PF value.
+     * Recursively builds the secondary structure stored in "mfeStructure",
+     * for the open interval ]m,s_i,r_j,c[.
+     * @return true if no error occurred
+     */
     private boolean backtrackHelper(int m, int s, int i, int r, int j, boolean c, int left, int right, double val){
         dpt.btInit(val);
         if (m == 0) return true;
@@ -317,6 +425,10 @@ public class DP {
         }
         throw new RuntimeException("Inconsistent Backtracking - needs bug fixing!!");
     }
+
+    /**
+     * @return the MFE or PF value.
+     */
     public double getMFE(){
         return mfeValue;
     }

@@ -48,20 +48,21 @@ public class FinalExperiments {
         }
     }
     private static void singleBpType(){
-        String[] st = new String[]{"CAG20","CCG20","GAU20","UAG20"};
-        for (int m = 1; m < 15; m++) {
+        String[] st = new String[]{"CCG40","UAG40","CAG40","GAU40"};
+        for (int m = 1; m < 11; m++) {
             TripletPool tp = new TripletPool(List.of(st));
             double[] data = classifyBasePairs(tp, m, 1000);
             System.out.printf("For m=%d, interior bps: %f, exterior homo-bps: %f, exterior hetero-bps: %f\n", m, data[0], data[1], data[2]);
         }
     }
     private static void singleBpTypeDetailed(){
-        String[] st = new String[]{"CAG20","CCG20","GAU20","UAG20;interior"};
-        for (int m = 10; m < 11; m++) {
-            TripletPool tp = new TripletPool(List.of(st));
-            double[][] data = classifyBasePairsDetailed(tp, m, 1000);
-
-        }
+        String[] st = new String[]{"CCG","UAA","UAC"};
+        int numRep = 20;
+        int m = 5;
+        LinkedList<String> stIn = new LinkedList<>();
+        for (String tr : st) stIn.add(tr + numRep);
+        TripletPool tp = new TripletPool(stIn);
+        double[][] data = classifyBasePairsDetailed(tp, m, 1000, st);
     }
     private static void bpTypes() throws IOException {
         double[][][][] results = new double[64][64][4][3];

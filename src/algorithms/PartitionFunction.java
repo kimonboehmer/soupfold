@@ -9,6 +9,10 @@ public class PartitionFunction implements DPType {
     private final Random r;
     double bpContrib;
     final double BOLTZMANN_CONSTANT = 0.001987;
+
+    /**
+     * @param temperature in Kelvin
+     */
     public PartitionFunction(double temperature){
         this.bpContrib = Math.exp(1.0 / (temperature * BOLTZMANN_CONSTANT));
         r = new Random();
@@ -46,10 +50,6 @@ public class PartitionFunction implements DPType {
 
     @Override
     public double strandPenalty(int strand, int length) {
-        /* For experiment 9:
-        if (strand == 0) return 90000;
-        if (strand == 2) return 1.15;
-        if (strand == 3) return 0.9;*/
         return Math.pow(1, length) ;
     }
 

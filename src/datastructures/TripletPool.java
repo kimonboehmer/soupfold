@@ -1,8 +1,6 @@
 package datastructures;
 
 import algorithms.DP;
-import datastructures.Base;
-import datastructures.StrandPool;
 
 import java.util.*;
 
@@ -85,41 +83,49 @@ public class TripletPool implements StrandPool {
         i = 0;
         for (Base[] pattern : patternOccurences) patternArray[i++] = pattern;
     }
+    @Override
     public void initializeTable(int m, int theta, double initValue){
         M = new double[m+1][numPatterns][maxRepeats * REPEAT_LENGTH][numPatterns][maxRepeats * 3][2];
         for(int si=0;si<numPatterns;si++)for(int ii=0;ii<maxRepeats * REPEAT_LENGTH;ii++)for(int ri=0;ri<numPatterns;ri++)for(int ji=0;ji<maxRepeats * REPEAT_LENGTH;ji++){
-            for (int mi = 1; mi < m+1;mi++){
+            for (int mi = 1; mi < m+1;mi++){ // initialize everything with "uninitialized"
                 M[mi][si][ii][ri][ji][0]= DP.NOT_SET;
                 M[mi][si][ii][ri][ji][1]= DP.NOT_SET;
             }
-            M[0][si][ii][ri][ji][0] = initValue;
+            M[0][si][ii][ri][ji][0] = initValue; // if no strands are remaining, there is no contribution
         }
         for (int i = 0; i < REPEAT_LENGTH; i++){
             for (int t = 0; t <= Math.min(theta, maxRepeats * REPEAT_LENGTH - 1); t++){
                 for (int p = 0; p < numPatterns; p++){
-                    M[1][p][i][p][t][0] = initValue;
+                    M[1][p][i][p][t][0] = initValue; // single-stranded intervals which do not
+                    // respect the minimum base pair span have no contribution
                 }
             }
         }
     }
+    @Override
     public Base getBase(int s, int pos) {
         if (pos > pool[s].repeats * REPEAT_LENGTH) throw new InputMismatchException("Position greater than strand length!");
         return patternArray[pool[s].pattern][pos % REPEAT_LENGTH];
     }
+    @Override
     public double getM(int m, int s, int i, int r, int j, boolean c){
         if (m == 1) return M[1][pool[s].pattern][i % REPEAT_LENGTH][pool[s].pattern][j - i][0];
         return M[m][pool[s].pattern][getStrandLength(s) - i - 1][pool[r].pattern][j][c ? 1 : 0];
     }
+    @Override
     public void setM(int m, int s, int i, int r, int j, boolean c, double val){
         if (m == 1) M[1][pool[s].pattern][i % REPEAT_LENGTH][pool[s].pattern][j - i][0] = val;
         M[m][pool[s].pattern][getStrandLength(s) - i - 1][pool[r].pattern][j][c ? 1 : 0] = val;
     }
+    @Override
     public int getStrandLength(int s){
         return pool[s].repeats * REPEAT_LENGTH;
     }
+    @Override
     public int getNumStrands(){
         return pool.length;
     }
+    @Override
     public String toString(int strand){
         char[] triplet = new char[REPEAT_LENGTH * pool[strand].repeats];
         for (int i = 0; i < triplet.length; i++) triplet[i] = patternArray[getPattern(strand)][i % REPEAT_LENGTH].toChar();

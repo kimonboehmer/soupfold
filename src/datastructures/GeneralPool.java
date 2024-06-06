@@ -60,11 +60,4 @@ public class GeneralPool implements StrandPool {
             }
         }
     }
-
-    @Override
-    public String toString(int strand) {
-        char[] c = new char[getStrandLength(strand)];
-        for (int i = 0; i < getStrandLength(strand); i++) c[i] = strandArray[strand][i].toChar();
-        return new String(c);
-    }
 }

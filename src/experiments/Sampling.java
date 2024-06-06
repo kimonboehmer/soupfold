@@ -192,7 +192,7 @@ public class Sampling {
         DP dp = new DP(sp, m, 3, true, new PartitionFunction(300));
         for (int l = 0; l < sampleSize; l++){
             SecondaryStructure s = dp.backtrack();
-            if (l == 5000) System.out.println(s.toString());
+            //if (l == 5000) System.out.println(s.toString());
             int len = 0;
             for (int i = 0; i < m; i++) len += sp.getStrandLength(s.getStrandFromPosition(i));
             sum += s.getNumBPs() / (double) len;
@@ -219,10 +219,10 @@ public class Sampling {
         double sum = interior + homoExt + heteroExt;
         return new double[]{interior / sum, homoExt / sum, heteroExt / sum};
     }
-    public static double[][] classifyBasePairsDetailed(TripletPool sp, int m, int sampleSize){
+    public static double[][] classifyBasePairsDetailed(TripletPool sp, int m, int sampleSize, String[] patterns){
         double[] interior = new double[sp.getNumStrands()];
         double[][] exterior = new double[sp.getNumStrands()][sp.getNumStrands()];
-        int[] c = new int[4];
+        int[] c = new int[patterns.length];
         DP dp = new DP(sp, m, 3, true, new PartitionFunction(300));
         for (int l = 0; l < sampleSize; l++){
             SecondaryStructure st = dp.backtrack();
@@ -232,20 +232,25 @@ public class Sampling {
                     int r = st.getPairedStrand(s, i);
                     if (r < 0) continue;
                     if (s == r) interior[st.getStrandFromPosition(s)]++;
-                    else exterior[st.getStrandFromPosition(s)][st.getStrandFromPosition(r)]++;
+                    else {
+                        exterior[st.getStrandFromPosition(s)][st.getStrandFromPosition(r)]++;
+                        if (st.getStrandFromPosition(s) != st.getStrandFromPosition(r))
+                            exterior[st.getStrandFromPosition(s)][st.getStrandFromPosition(r)]++;
+                    }
+
                 }
             }
         }
-        String[] s = new String[]{"CAG","CCG","GAU","UAG"};
-        System.out.println(";CAG;CCG;GAU;UAG");
-        for (int i = 0; i < 4; i++) {
-            System.out.printf("%s;", s[i]);
-            double nominatorI = (interior[i] + exterior[i][0]+exterior[i][1]+exterior[i][2]+exterior[i][3]);
+        for (String p : patterns) System.out.printf(";%s", p);
+        for (int i = 0; i < patterns.length; i++) {
+            System.out.printf("\n%s;", patterns[i]);
+            double nominatorI = interior[i];
+            for (int j = 0; j < patterns.length; j++) nominatorI += exterior[i][j];
             //System.out.printf("Probability of BPs for %s being interior: %f\n", s[i], interior[i] / nominatorI);
-            for (int j = 0; j < 4; j++){
+            for (int j = 0; j < patterns.length; j++){
                 System.out.printf("%s;",exterior[i][j] / nominatorI);
             }
-            System.out.printf("%s\n",interior[i] / nominatorI);
+            System.out.printf("%s",interior[i] / nominatorI);
         }
         System.out.println(Arrays.toString(c));
         return exterior;

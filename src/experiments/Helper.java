@@ -67,7 +67,7 @@ public class Helper {
     public static void createGraph(double[][] data, String path) throws IOException {
         StringBuilder sb = new StringBuilder("#64 100");
         for (int i = 0; i < 64; i++) for (int j = i+1; j < 64; j++){
-            if (data[i][i] < 0 || data[j][j] < 0 || data[i][j] > 0.175 || data[i][j] < 0){
+            if (data[i][i] < 0 || data[j][j] < 0 || data[i][j] > 0.1705 || data[i][j] < 0){
                 sb.append("\n").append(i).append(" ").append(j);
             }
         }
@@ -77,7 +77,7 @@ public class Helper {
     }
     public static void getClique(){
         boolean[] out = new boolean[64];
-        int[] arr = new int[]{42,40,34,32,31,29,23,21,20,63,61,8,5,4,2,1,0,17,16,55,10,53,59,46,58,47,62,43,44,27,14,57,39,30,54,56,13,28,24,9,19,52,38,36,33,25,60,7,6,3,12,51,49,41,37,26,15,11,45,48};
+        int[] arr = new int[]{42,40,34,32,31,29,23,21,20,63,61,8,5,4,2,1,0,17,16,55,10,53,62,59,46,58,47,43,11,44,27,14,57,54,45,39,35,30,56,50,9,13,28,24,7,6,19,18,52,41,38,37,36,33,26,25,60,3,15,12,51};
         for (int el : arr) out[el] = true;
         int i = 0;
         for (Base X : bases) for (Base Y : bases) for (Base Z : bases){

@@ -8,6 +8,11 @@ public class SecondaryStructure {
     private static class Position{
         int strand;
         int pos;
+
+        /**
+         * @param strand position of the strand in the permutation
+         * @param pos index in the strand
+         */
         protected Position(int strand, int pos){
             this.strand = strand;
             this.pos = pos;
@@ -18,6 +23,11 @@ public class SecondaryStructure {
     private final Position[][] partner; // -1 if unpaired
     private final int[] permutation;
     private int numBPs;
+
+    /**
+     * @param sp strand pool on which the secondary structure is built
+     * @param m number of interacting strands
+     */
     public SecondaryStructure(StrandPool sp, int m){
         this.sp = sp;
         int maxStrandLength = 0;
@@ -42,6 +52,11 @@ public class SecondaryStructure {
         partner[r][j] = new Position(s, i);
         numBPs++;
     }
+
+    /**
+     * @param s strand number
+     * @param i strand position
+     */
     public void setStrandRank(int s, int i){
         permutation[i] = s;
     }
@@ -65,11 +80,28 @@ public class SecondaryStructure {
         Position p = partner[s][i];
         return p == null ? -1 : p.pos;
     }
+
+    /**
+     * @param i strand position
+     * @return strand number
+     */
     public int getStrandFromPosition(int i){
         return permutation[i];
     }
+
+    /**
+     * @return number of interacting strands
+     */
     public int getM(){ return permutation.length; }
+
+    /**
+     * @return strand pool.
+     */
     public StrandPool getStrandPool(){ return sp; }
+
+    /**
+     * @return a string representation of this secondary structure.
+     */
     public String toString(){
         StringBuilder sb = new StringBuilder(sp.toString(permutation[0]));
         for (int i = 1; i < permutation.length; i++) {
@@ -87,6 +119,12 @@ public class SecondaryStructure {
         }
         return sb.toString();
     }
+
+    /**
+     * @param name name of the structure, for the filename
+     * stores the secondary structure in a file,
+     * readable for common RNA visualization programs like "RiboSketch".
+     */
     public void toFile(String name){
         try {
             File myObj = new File("structure_" + name +  ".txt");
@@ -110,6 +148,9 @@ public class SecondaryStructure {
         }
     }
 
+    /**
+     * @return the total number of base pairs in this secondary structure.
+     */
     public int getNumBPs() {
         return numBPs;
     }
