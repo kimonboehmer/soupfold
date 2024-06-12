@@ -1,8 +1,7 @@
 # SoupFold
 
 SoupFold allows computing the minimum free energy and the partition function over a set of RNA sequences. Each sequence can appear arbitrarily often in a secondary structure, as long as the total number of strands is $m$. <br>
-Furthermore, the code contains the experiments for the paper "RNA Triplet Repeats: Improved Algorithms for1
-Structure Prediction and Interactions". <br>
+Furthermore, the code contains the experiments for the paper "RNA Triplet Repeats: Improved Algorithms for Structure Prediction and Interactions". <br>
 
 ## Using the program
 
@@ -29,7 +28,7 @@ To run the algorithm, we just create an instance of `DP`: <br>
 `m` is the number of interacting strands, `theta`is the minimum base pair span, `conn` should be `true` if we want to enforce the considered structures to be connected and `false` otherwise, and `DPType` specifies whether we want to compute the MFE or the Partition function, and is detailed in the following.<br>
 After the constructor is called, we can call two methods:
 - `getMFE()` gives the value of the MFE/PF.
-- `backtrack` will return a MFE secondary structure in the case that DPType is of type `MFE`, and will sample a secondary structure from the Boltzmann ensemble if `DPType` is of type `PartitionFunction`.
+- `backtrack()` will return a MFE secondary structure in the case that DPType is of type `MFE`, and will sample a secondary structure from the Boltzmann ensemble if `DPType` is of type `PartitionFunction`.
 
 #### MFE
 
@@ -51,12 +50,12 @@ strands.add("ACG9");
 StrandPool sp = new TripletPool(strands);
 DP mfe = new DP(sp, 3, 3, true, new MFE());
 SecondaryStructure st = mfe.backtrack();
-System.out.printf("Minimum free energy: %s", mfe.getMFE());
-System.out.printf("Secondary structure with minimum free energy: %s", st);
+System.out.printf("Minimum free energy: %s\n", mfe.getMFE());
+System.out.printf("Secondary structure with minimum free energy: %s\n", st);
 DP pf = new DP(sp, 3, 3, true, new PartitionFunction(300));
-SecondaryStructure st = mfe.backtrack();
-System.out.printf("Partition Function value: %s", mfe.getMFE());
-System.out.printf("Sampled secondary structure from the Boltzmann ensemble: %s", st);
+SecondaryStructure st2 = pf.backtrack();
+System.out.printf("Partition Function value: %s\n", pf.getMFE());
+System.out.printf("Sampled secondary structure from the Boltzmann ensemble: %s", st2);
 ```
 
 
@@ -65,4 +64,4 @@ System.out.printf("Sampled secondary structure from the Boltzmann ensemble: %s",
 
 All experiments mentioned in the paper can simply be reconstructed by running the main function. The method <br>
 `public static void doExperiment(int num)`<br>
-takes one argument `num` which specifies the index between 1 and 7 of the experiment to be reconstructed. Index 0 will execute all experiments in order and is the default option.
+takes one argument `num` which specifies the index of the experiment to be reconstructed. Index 0 will execute all experiments in order and is the default option.
